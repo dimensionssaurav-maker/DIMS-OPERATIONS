@@ -1,10 +1,95 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+
+      <FilterBar search={srch} onSearch={setSrch} dateFrom={dFrom} onDateFrom={setDFrom} dateTo={dTo} onDateTo={setDTo}
+        filters={[{label:'Status',value:fStat,onChange:setFStat,options:['Drawing Phase','Production Ready','Dispatched']}]}
+        onClear={()=>{setSrch('');setDFrom('');setDTo('');setFStat('');}}
+        onExport={()=>exportCSV('orders',['Order No','Customer','Phone','Deadline','Amount','Status'],filteredOrders.map(o=>[o.showroom_order_no,o.customer_name,o.phone||'',o.delivery_deadline,o.amount||0,o.status]))}
+        resultCount={filteredOrders.length}
+      />
 import { useAuthStore } from './store/authStore';
 import { STAGES, type AppData } from './data/seed';
 import { Badge, StatusBadge, StatCard, Modal, FormField, Input, Sel, Btn, Table, Toast, SidebarItem } from './components/ui';
 import Dashboard from './pages/Dashboard';
 import { useData } from './hooks/useData';
+
+// ─── CSV EXPORT ───────────────────────────────────────────────────────────────
+function exportCSV(filename, headers, rows) {
+  const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
+  const csv = [headers.map(esc).join(','), ...rows.map(r=>r.map(esc).join(','))].join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`${filename}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ─── FILTER BAR ───────────────────────────────────────────────────────────────
+function FilterBar({ search, onSearch, dateFrom, onDateFrom, dateTo, onDateTo, filters=[], onExport, onClear, resultCount }) {
+  const [showDP, setShowDP] = useState(false);
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const [qYear, setQYear] = useState(new Date().getFullYear().toString());
+  const setMonthRange = (m, y) => {
+    const from = `${y}-${String(m+1).padStart(2,'0')}-01`;
+    const last = new Date(y,m+1,0).getDate();
+    const to = `${y}-${String(m+1).padStart(2,'0')}-${String(last).padStart(2,'0')}`;
+    onDateFrom(from); onDateTo(to); setShowDP(false);
+  };
+  const hasF = search||dateFrom||dateTo||filters.some(f=>f.value);
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="relative flex-1 min-w-[180px]">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+          <input value={search} onChange={e=>onSearch(e.target.value)} placeholder="Search..." className="w-full pl-8 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"/>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-slate-500 font-semibold">From</span>
+          <input type="date" value={dateFrom} onChange={e=>onDateFrom(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"/>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-slate-500 font-semibold">To</span>
+          <input type="date" value={dateTo} onChange={e=>onDateTo(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"/>
+        </div>
+        <div className="relative">
+          <button onClick={()=>setShowDP(!showDP)} className="flex items-center gap-1 text-sm border border-slate-200 rounded-xl px-3 py-2 hover:bg-slate-100 bg-slate-50 text-slate-600 font-medium">📅 Month</button>
+          {showDP && (
+            <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 w-72">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">Quick Select</span>
+                <select value={qYear} onChange={e=>setQYear(e.target.value)} className="text-xs border border-slate-200 rounded-lg px-2 py-1 outline-none">
+                  {['2024','2025','2026','2027'].map(y=><option key={y}>{y}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-4 gap-1">
+                {MONTHS.map((m,i)=>(
+                  <button key={m} onClick={()=>setMonthRange(i,Number(qYear))} className="text-xs py-1.5 px-2 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 font-medium text-slate-600 border border-transparent hover:border-emerald-200">{m}</button>
+                ))}
+              </div>
+              <div className="mt-2 pt-2 border-t border-slate-100 flex gap-1">
+                {['Q1','Q2','Q3','Q4'].map((q,i)=>(
+                  <button key={q} onClick={()=>{
+                    const s=[0,3,6,9],e=[2,5,8,11];
+                    const sd=new Date(Number(qYear),s[i],1),ed=new Date(Number(qYear),e[i]+1,0);
+                    onDateFrom(sd.toISOString().slice(0,10)); onDateTo(ed.toISOString().slice(0,10)); setShowDP(false);
+                  }} className="flex-1 text-xs py-1 rounded-lg bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100">{q}</button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        {filters.map(f=>(
+          <select key={f.label} value={f.value} onChange={e=>f.onChange(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 text-slate-700">
+            <option value="">{f.label}: All</option>
+            {f.options.map(o=><option key={o} value={o}>{o}</option>)}
+          </select>
+        ))}
+        {hasF && onClear && <button onClick={onClear} className="text-xs text-rose-500 hover:text-rose-700 font-bold px-2 py-1 rounded-lg hover:bg-rose-50">✕ Clear</button>}
+        {onExport && <button onClick={onExport} className="flex items-center gap-1 text-sm bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 shadow-sm">⬇ Export CSV</button>}
+        {resultCount!==undefined && <span className="ml-auto text-xs text-slate-400 font-medium">{resultCount} result{resultCount!==1?'s':''}</span>}
+      </div>
+    </div>
+  );
+}
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
 function LoginPage() {
@@ -78,6 +163,18 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
     setShowDrawModal(null);
   };
 
+  const [srch, setSrch] = useState('');
+  const [dFrom, setDFrom] = useState('');
+  const [dTo, setDTo] = useState('');
+  const [fStat, setFStat] = useState('');
+  const filteredOrders = useMemo(() => data.orders.filter(o => {
+    const q = srch.toLowerCase();
+    if (q && !o.showroom_order_no?.toLowerCase().includes(q) && !o.customer_name?.toLowerCase().includes(q)) return false;
+    if (fStat && o.status !== fStat) return false;
+    if (dFrom && o.delivery_deadline < dFrom) return false;
+    if (dTo && o.delivery_deadline > dTo) return false;
+    return true;
+  }), [data.orders, srch, fStat, dFrom, dTo]);
   const uploadDrawing = (orderId: number) => {
     const exists = data.drawings.find((dr) => dr.order_id === orderId);
     const version = exists ? exists.version + 1 : 1;
@@ -262,6 +359,22 @@ function PurchasePage({ data, setData, showToast }: { data: AppData; setData: an
   const [poForm, setPoForm] = useState({ supplier_id: '', items: [{ material_id: '', quantity: 1, unit_price: 0 }] });
   const [issueForm, setIssueForm] = useState({ production_item_id: '', department: 'Carpentry', items: [{ material_id: '', quantity: 0 }] });
 
+  const [poSrch, setPoSrch] = useState('');
+  const [poFrom, setPoFrom] = useState('');
+  const [poTo, setPoTo] = useState('');
+  const [poStat, setPoStat] = useState('');
+  const [poSupp, setPoSupp] = useState('');
+  const filteredPOs = useMemo(()=>data.purchaseOrders.filter(po=>{
+    const q=poSrch.toLowerCase();
+    if(q && !po.po_number?.toLowerCase().includes(q) && !po.supplier_name?.toLowerCase().includes(q)) return false;
+    if(poStat && po.status!==poStat) return false;
+    if(poSupp && po.supplier_name!==poSupp) return false;
+    if(poFrom && po.order_date<poFrom) return false;
+    if(poTo && po.order_date>poTo) return false;
+    return true;
+  }),[data.purchaseOrders,poSrch,poStat,poSupp,poFrom,poTo]);
+  const suppNames = useMemo(()=>[...new Set(data.suppliers.map(s=>s.name))],[data.suppliers]);
+
   const addSupplier = (e: React.FormEvent) => {
     e.preventDefault();
     const id = data.suppliers.length + 1;
@@ -322,10 +435,16 @@ function PurchasePage({ data, setData, showToast }: { data: AppData; setData: an
       <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl w-fit">
         {TABS.map((t) => <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${tab === t.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>{t.l}</button>)}
       </div>
-      {tab === 'pos' && (
+      {tab === 'pos' && (<>
+        <FilterBar search={poSrch} onSearch={setPoSrch} dateFrom={poFrom} onDateFrom={setPoFrom} dateTo={poTo} onDateTo={setPoTo}
+          filters={[{label:'Status',value:poStat,onChange:setPoStat,options:['Draft','Sent','Partial','Received','Cancelled']},{label:'Supplier',value:poSupp,onChange:setPoSupp,options:suppNames}]}
+          onClear={()=>{setPoSrch('');setPoFrom('');setPoTo('');setPoStat('');setPoSupp('');}}
+          onExport={()=>exportCSV('purchase_orders',['PO No','Supplier','Date','Amount','Status'],filteredPOs.map(po=>[po.po_number,po.supplier_name,po.order_date,po.total_amount,po.status]))}
+          resultCount={filteredPOs.length}
+        />
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           <Table cols={['PO Number', 'Supplier', 'Item', 'Date', 'Amount', 'Status', 'Action']}
-            rows={data.purchaseOrders.map((po) => (
+            rows={filteredPOs.map((po) => (
               <tr key={po.id} className="hover:bg-slate-50 transition-colors">
                 <td className="px-5 py-4 font-bold text-indigo-600 text-sm font-mono">{po.po_number}</td>
                 <td className="px-5 py-4 text-sm font-semibold text-slate-900">{po.supplier_name}</td>
@@ -341,7 +460,7 @@ function PurchasePage({ data, setData, showToast }: { data: AppData; setData: an
             ))}
           />
         </div>
-      )}
+      </>)}
       {tab === 'suppliers' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {data.suppliers.map((s) => (
@@ -431,6 +550,19 @@ function InventoryPage({ data, setData, showToast }: { data: AppData; setData: a
   const [showAdjust, setShowAdjust] = useState<any>(null);
   const [adj, setAdj] = useState({ amount: 0, reason: '' });
 
+  const [invSearch, setInvSearch] = useState('');
+  const [invCat, setInvCat] = useState('');
+  const [invAlert, setInvAlert] = useState('');
+  const filteredMats = useMemo(() => data.materials.filter(m => {
+    const q = invSearch.toLowerCase();
+    if (q && !m.name?.toLowerCase().includes(q) && !m.category?.toLowerCase().includes(q)) return false;
+    if (invCat && m.category !== invCat) return false;
+    if (invAlert === 'Zero' && m.current_stock !== 0) return false;
+    if (invAlert === 'Low' && !(m.current_stock > 0 && m.current_stock <= m.min_stock_level)) return false;
+    if (invAlert === 'OK' && m.current_stock <= m.min_stock_level) return false;
+    return true;
+  }), [data.materials, invSearch, invCat, invAlert]);
+
   const handleAdjust = (e: React.FormEvent) => {
     e.preventDefault();
     setData((d: AppData) => ({ ...d, materials: d.materials.map((m) => m.id === showAdjust.id ? { ...m, current_stock: Math.max(0, m.current_stock + Number(adj.amount)) } : m) }));
@@ -443,9 +575,15 @@ function InventoryPage({ data, setData, showToast }: { data: AppData; setData: a
       <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl w-fit">
         {[{ id: 'raw', l: 'Raw Materials' }, { id: 'wip', l: 'WIP' }, { id: 'finished', l: 'Finished Goods' }].map((t) => <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${tab === t.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>{t.l}</button>)}
       </div>
-      {tab === 'raw' && (
+      {tab === 'raw' && (<>
+        <FilterBar search={invSearch} onSearch={setInvSearch} dateFrom="" onDateFrom={()=>{}} dateTo="" onDateTo={()=>{}}
+          filters={[{label:'Category',value:invCat,onChange:setInvCat,options:['Wood','Metal','Fabric','Paint','Hardware']},{label:'Alert',value:invAlert,onChange:setInvAlert,options:['Zero','Low','OK']}]}
+          onClear={()=>{setInvSearch('');setInvCat('');setInvAlert('');}}
+          onExport={()=>exportCSV('inventory',['Name','Category','Unit','Stock','Min Level','Status'],filteredMats.map(m=>[m.name,m.category,m.unit,m.current_stock,m.min_stock_level,m.current_stock===0?'ZERO':m.current_stock<=m.min_stock_level?'LOW':'OK']))}
+          resultCount={filteredMats.length}
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data.materials.map((m) => {
+          {filteredMats.map((m) => {
             const pct = m.min_stock_level > 0 ? Math.min((m.current_stock / m.min_stock_level) * 100, 200) : 100;
             const isLow = m.current_stock <= m.min_stock_level;
             return (
@@ -466,7 +604,7 @@ function InventoryPage({ data, setData, showToast }: { data: AppData; setData: a
             );
           })}
         </div>
-      )}
+      </>)}
       {tab === 'wip' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {data.production.map((item) => (
@@ -536,7 +674,22 @@ function ProductionPage({ data, setData, showToast }: { data: AppData; setData: 
     showToast('Item released from hold ✓');
   };
 
-  const items = filter === 'hold' ? data.production.filter((p) => p.status === 'Hold') : filter === 'ready' ? data.production.filter((p) => p.current_stage === STAGES[STAGES.length - 1]) : data.production;
+  const [prodSearch, setProdSearch] = useState('');
+  const [prodStage, setProdStage] = useState('');
+  const [prodCust, setProdCust] = useState('');
+  const [prodFrom, setProdFrom] = useState('');
+  const [prodTo, setProdTo] = useState('');
+  const prodCusts = useMemo(()=>[...new Set(data.production.map(p=>p.customer_name))],[data.production]);
+  const baseItems = filter === 'hold' ? data.production.filter((p) => p.status === 'Hold') : filter === 'ready' ? data.production.filter((p) => p.current_stage === STAGES[STAGES.length - 1]) : data.production;
+  const items = useMemo(()=>baseItems.filter(p=>{
+    const q=prodSearch.toLowerCase();
+    if(q && !p.production_id?.toLowerCase().includes(q) && !p.product_name?.toLowerCase().includes(q) && !p.customer_name?.toLowerCase().includes(q)) return false;
+    if(prodStage && p.current_stage !== prodStage) return false;
+    if(prodCust && p.customer_name !== prodCust) return false;
+    if(prodFrom && p.created_at < prodFrom) return false;
+    if(prodTo && p.created_at > prodTo) return false;
+    return true;
+  }),[baseItems,prodSearch,prodStage,prodCust,prodFrom,prodTo]);
 
   return (
     <div className="space-y-6">
@@ -552,6 +705,16 @@ function ProductionPage({ data, setData, showToast }: { data: AppData; setData: 
       </div>
       <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl w-fit">
         {[{ id: 'all', l: 'All Items' }, { id: 'hold', l: `On Hold (${data.production.filter((p) => p.status === 'Hold').length})` }, { id: 'ready', l: 'Ready to Dispatch' }].map((t) => <button key={t.id} onClick={() => setFilter(t.id)} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === t.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>{t.l}</button>)}
+
+      <FilterBar search={prodSearch} onSearch={setProdSearch} dateFrom={prodFrom} onDateFrom={setProdFrom} dateTo={prodTo} onDateTo={setProdTo}
+        filters={[
+          {label:'Stage',value:prodStage,onChange:setProdStage,options:['Stage 1: Carpentry','Stage 2: Upholstery','Stage 3: Metal','Stage 4: Stone','Stage 5: Paint','Stage 6: QC','Stage 7: Ready for Dispatch']},
+          {label:'Customer',value:prodCust,onChange:setProdCust,options:[...new Set(data.production.map(p=>p.customer_name))]},
+        ]}
+        onClear={()=>{setProdSearch('');setProdFrom('');setProdTo('');setProdStage('');setProdCust('');}}
+        onExport={()=>exportCSV('production',['Prod ID','Product','Customer','Order','Stage','Status','Qty'],items.map(p=>[p.production_id,p.product_name,p.customer_name,p.showroom_order_no,p.current_stage,p.status,p.quantity]))}
+        resultCount={items.length}
+      />
       </div>
       <div className="space-y-4">
         {items.map((item) => {
@@ -632,9 +795,18 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
     setShowModal(false); setEditId(null); setForm({ production_item_id: '', estimated_cost: 0, material_cost: 0, labour_cost: 0, overheads: 0 });
   };
 
-  const totalMat = data.costing.reduce((a, c) => a + c.material_cost, 0);
-  const totalLab = data.costing.reduce((a, c) => a + c.labour_cost, 0);
-  const totalOh = data.costing.reduce((a, c) => a + c.overheads, 0);
+  const [costSearch, setCostSearch] = useState('');
+  const [costBudget, setCostBudget] = useState('');
+  const filteredCosts = useMemo(() => data.costing.filter(c => {
+    const q = costSearch.toLowerCase();
+    if (q && !c.production_id?.toLowerCase().includes(q) && !c.product_name?.toLowerCase().includes(q)) return false;
+    if (costBudget === 'Over' && !(c.total_cost > c.estimated_cost)) return false;
+    if (costBudget === 'Under' && !(c.total_cost <= c.estimated_cost)) return false;
+    return true;
+  }), [data.costing, costSearch, costBudget]);
+  const totalMat = filteredCosts.reduce((a, c) => a + c.material_cost, 0);
+  const totalLab = filteredCosts.reduce((a, c) => a + c.labour_cost, 0);
+  const totalOh = filteredCosts.reduce((a, c) => a + c.overheads, 0);
 
   return (
     <div className="space-y-6">
@@ -648,9 +820,15 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
         <StatCard title="Total Overhead" value={`₹${(totalOh / 1000).toFixed(0)}K`} icon="⚡" colorClass="bg-amber-500" />
         <StatCard title="Total Cost" value={`₹${((totalMat + totalLab + totalOh) / 1000).toFixed(0)}K`} icon="💰" colorClass="bg-emerald-500" />
       </div>
+      <FilterBar search={costSearch} onSearch={setCostSearch} dateFrom="" onDateFrom={()=>{}} dateTo="" onDateTo={()=>{}}
+        filters={[{label:'Budget',value:costBudget,onChange:setCostBudget,options:['Over','Under']}]}
+        onClear={()=>{setCostSearch('');setCostBudget('');}}
+        onExport={()=>exportCSV('costing',['Prod ID','Product','Estimated','Material','Labour','Overhead','Total','Budget'],filteredCosts.map(c=>[c.production_id,c.product_name,c.estimated_cost,c.material_cost,c.labour_cost,c.overheads,c.total_cost,c.total_cost>c.estimated_cost?'Over':'Under']))}
+        resultCount={filteredCosts.length}
+      />
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <Table cols={['Production ID', 'Product', 'Estimated', 'Material', 'Labour', 'Overhead', 'Total', 'Status', 'Edit']}
-          rows={data.costing.map((c) => {
+          rows={filteredCosts.map((c) => {
             const status = c.total_cost > c.estimated_cost ? 'Over Budget' : 'Under Budget';
             return (
               <tr key={c.id} className="hover:bg-slate-50 transition-colors">
@@ -706,6 +884,23 @@ function InvoicingPage({ data, setData, showToast }: { data: AppData; setData: a
     setForm({ production_item_id: '', invoice_no: '', dispatch_date: '', total_amount: 0 });
   };
 
+  const [invSrch, setInvSrch] = useState('');
+  const [invFrom, setInvFrom] = useState('');
+  const [invTo, setInvTo] = useState('');
+  const [invPay, setInvPay] = useState('');
+  const [invCust, setInvCust] = useState('');
+  const invCusts = useMemo(()=>[...new Set(data.invoices.map(i=>i.customer_name).filter(Boolean))],[data.invoices]);
+  const filteredInvs = useMemo(()=>data.invoices.filter(i=>{
+    const q=invSrch.toLowerCase();
+    if(q && !i.invoice_no?.toLowerCase().includes(q) && !i.customer_name?.toLowerCase().includes(q)) return false;
+    if(invPay && i.status!==invPay) return false;
+    if(invCust && i.customer_name!==invCust) return false;
+    const d=i.dispatch_date||i.created_at?.slice(0,10)||'';
+    if(invFrom && d<invFrom) return false;
+    if(invTo && d>invTo) return false;
+    return true;
+  }),[data.invoices,invSrch,invPay,invCust,invFrom,invTo]);
+
   const markPaid = (id: number) => {
     setData((d: AppData) => ({ ...d, invoices: d.invoices.map((i) => i.id === id ? { ...i, status: 'Paid' } : i) }));
     showToast('Payment recorded!');
@@ -720,14 +915,20 @@ function InvoicingPage({ data, setData, showToast }: { data: AppData; setData: a
         <Btn onClick={() => setShowModal(true)}>🧾 Generate Invoice</Btn>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Invoices" value={data.invoices.length} icon="🧾" colorClass="bg-indigo-500" />
-        <StatCard title="Paid" value={data.invoices.filter((i) => i.status === 'Paid').length} icon="✅" colorClass="bg-emerald-500" />
-        <StatCard title="Unpaid" value={data.invoices.filter((i) => i.status === 'Unpaid').length} icon="⏳" colorClass="bg-rose-500" />
+        <StatCard title="Total Invoices" value={filteredInvs.length} icon="🧾" colorClass="bg-indigo-500" />
+        <StatCard title="Paid" value={filteredInvs.filter((i) => i.status === 'Paid').length} icon="✅" colorClass="bg-emerald-500" />
+        <StatCard title="Unpaid" value={filteredInvs.filter((i) => i.status === 'Unpaid').length} icon="⏳" colorClass="bg-rose-500" />
         <StatCard title="Revenue (Paid)" value={`₹${(totalRev / 100000).toFixed(2)}L`} icon="💰" colorClass="bg-amber-500" />
       </div>
+      <FilterBar search={invSrch} onSearch={setInvSrch} dateFrom={invFrom} onDateFrom={setInvFrom} dateTo={invTo} onDateTo={setInvTo}
+        filters={[{label:'Status',value:invPay,onChange:setInvPay,options:['Paid','Unpaid']},{label:'Customer',value:invCust,onChange:setInvCust,options:invCusts}]}
+        onClear={()=>{setInvSrch('');setInvFrom('');setInvTo('');setInvPay('');setInvCust('');}}
+        onExport={()=>exportCSV('invoices',['Invoice No','Customer','Date','GST','Total','Status'],filteredInvs.map(i=>[i.invoice_no,i.customer_name,i.dispatch_date||'',Math.round(i.gst_amount||0),Math.round(i.total_amount||0),i.status]))}
+        resultCount={filteredInvs.length}
+      />
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <Table cols={['Invoice No', 'Customer', 'Date', 'CGST (9%)', 'SGST (9%)', 'Total', 'Status', 'Action']}
-          rows={data.invoices.map((inv) => (
+          rows={filteredInvs.map((inv) => (
             <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
               <td className="px-5 py-4 font-bold text-indigo-600 text-sm">{inv.invoice_no}</td>
               <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{inv.customer_name}</td>
@@ -770,25 +971,69 @@ function InvoicingPage({ data, setData, showToast }: { data: AppData; setData: a
 // ─── REPORTS ──────────────────────────────────────────────────────────────────
 function ReportsPage({ data }: { data: AppData }) {
   const [tab, setTab] = useState('production');
-  const totalRev = data.invoices.filter((i) => i.status === 'Paid').reduce((a, i) => a + i.total_amount, 0);
-  const totalCost = data.costing.reduce((a, c) => a + c.total_cost, 0);
+  const [rptSrch, setRptSrch] = useState('');
+  const [rptFrom, setRptFrom] = useState('');
+  const [rptTo, setRptTo] = useState('');
+  const [rptFilt, setRptFilt] = useState('');
+  const rptProd = useMemo(()=>data.production.filter(p=>{
+    const q=rptSrch.toLowerCase();
+    if(q && !p.production_id?.toLowerCase().includes(q) && !p.product_name?.toLowerCase().includes(q) && !p.customer_name?.toLowerCase().includes(q)) return false;
+    if(rptFilt && p.status!==rptFilt) return false;
+    if(rptFrom && p.created_at<rptFrom) return false;
+    if(rptTo && p.created_at>rptTo) return false;
+    return true;
+  }),[data.production,rptSrch,rptFilt,rptFrom,rptTo]);
+  const rptCosts = useMemo(()=>data.costing.filter(c=>{
+    const q=rptSrch.toLowerCase();
+    if(q && !c.production_id?.toLowerCase().includes(q) && !c.product_name?.toLowerCase().includes(q)) return false;
+    if(rptFrom && c.created_at<rptFrom) return false;
+    if(rptTo && c.created_at>rptTo) return false;
+    return true;
+  }),[data.costing,rptSrch,rptFrom,rptTo]);
+  const rptInvs = useMemo(()=>data.invoices.filter(i=>{
+    const q=rptSrch.toLowerCase();
+    if(q && !i.invoice_no?.toLowerCase().includes(q) && !i.customer_name?.toLowerCase().includes(q)) return false;
+    if(rptFilt && i.status!==rptFilt) return false;
+    const d=i.dispatch_date||i.created_at?.slice(0,10)||'';
+    if(rptFrom && d<rptFrom) return false;
+    if(rptTo && d>rptTo) return false;
+    return true;
+  }),[data.invoices,rptSrch,rptFilt,rptFrom,rptTo]);
+  const rptMats = useMemo(()=>data.materials.filter(m=>{
+    const q=rptSrch.toLowerCase();
+    if(q && !m.name?.toLowerCase().includes(q) && !m.category?.toLowerCase().includes(q)) return false;
+    return true;
+  }),[data.materials,rptSrch]);
+  const totalRev = rptInvs.filter((i) => i.status === 'Paid').reduce((a, i) => a + i.total_amount, 0);
+  const totalCost = rptCosts.reduce((a, c) => a + c.total_cost, 0);
   const TABS = [{ id: 'production', l: '🏭 Production Report' }, { id: 'cost', l: '💰 Cost Analysis' }, { id: 'stock', l: '📦 Stock Report' }, { id: 'profit', l: '📈 Profitability' }];
   return (
     <div className="space-y-6">
       <div><h1 className="text-2xl font-bold text-slate-900">Operational Reports</h1><p className="text-sm text-slate-500">Production · Cost · Stock · Profitability</p></div>
+      <FilterBar search={rptSrch} onSearch={setRptSrch} dateFrom={rptFrom} onDateFrom={setRptFrom} dateTo={rptTo} onDateTo={setRptTo}
+        filters={tab==='production'||tab==='profit'?[{label:tab==='production'?'Status':'Payment',value:rptFilt,onChange:setRptFilt,options:tab==='production'?['Active','Hold']:['Paid','Unpaid']}]:[]}
+        onClear={()=>{setRptSrch('');setRptFrom('');setRptTo('');setRptFilt('');}}
+        onExport={()=>{
+          if(tab==='production') exportCSV('rpt_production',['Prod ID','Product','Customer','Stage','Qty','Status'],rptProd.map(p=>[p.production_id,p.product_name,p.customer_name,p.current_stage,p.quantity,p.status]));
+          if(tab==='cost') exportCSV('rpt_cost',['Prod ID','Product','Est','Material','Labour','Overhead','Total'],rptCosts.map(c=>[c.production_id,c.product_name,c.estimated_cost,c.material_cost,c.labour_cost,c.overheads,c.total_cost]));
+          if(tab==='stock') exportCSV('rpt_stock',['Material','Category','Stock','Min Level','Status'],rptMats.map(m=>[m.name,m.category,m.current_stock,m.min_stock_level,m.current_stock===0?'ZERO':m.current_stock<=m.min_stock_level?'LOW':'OK']));
+          if(tab==='profit') exportCSV('rpt_profit',['Invoice','Customer','Base','GST','Total','Status'],rptInvs.map(i=>[i.invoice_no,i.customer_name,Math.round(i.total_amount/1.18),Math.round(i.gst_amount||0),Math.round(i.total_amount),i.status]));
+        }}
+        resultCount={tab==='production'?rptProd.length:tab==='cost'?rptCosts.length:tab==='stock'?rptMats.length:rptInvs.length}
+      />
       <div className="flex gap-2 flex-wrap">
         {TABS.map((t) => <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${tab === t.id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>{t.l}</button>)}
       </div>
       {tab === 'production' && (
         <div className="space-y-5">
           <div className="grid grid-cols-3 gap-4">
-            <StatCard title="Total Items" value={data.production.length} icon="🏭" colorClass="bg-indigo-500" />
-            <StatCard title="Active" value={data.production.filter((p) => p.status === 'Active').length} icon="▶" colorClass="bg-emerald-500" />
-            <StatCard title="On Hold" value={data.production.filter((p) => p.status === 'Hold').length} icon="⏸" colorClass="bg-rose-500" />
+            <StatCard title="Filtered" value={rptProd.length} icon="🏭" colorClass="bg-indigo-500" />
+            <StatCard title="Active" value={rptProd.filter((p) => p.status === 'Active').length} icon="▶" colorClass="bg-emerald-500" />
+            <StatCard title="On Hold" value={rptProd.filter((p) => p.status === 'Hold').length} icon="⏸" colorClass="bg-rose-500" />
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <Table cols={['Prod. ID', 'Product', 'Customer', 'Stage', 'Qty', 'Status']}
-              rows={data.production.map((p) => (
+              rows={rptProd.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-50">
                   <td className="px-5 py-4 font-bold text-indigo-600 text-sm font-mono">{p.production_id}</td>
                   <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{p.product_name}</td>
@@ -812,7 +1057,7 @@ function ReportsPage({ data }: { data: AppData }) {
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <Table cols={['Prod. ID', 'Product', 'Estimated', 'Material', 'Labour', 'Overhead', 'Total', 'Budget']}
-              rows={data.costing.map((c) => (
+              rows={rptCosts.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50">
                   <td className="px-5 py-4 font-bold text-indigo-600 text-sm font-mono">{c.production_id}</td>
                   <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{c.product_name}</td>
@@ -831,7 +1076,7 @@ function ReportsPage({ data }: { data: AppData }) {
       {tab === 'stock' && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           <Table cols={['Material', 'Category', 'Current Stock', 'Min Level', 'Shortfall', 'Status']}
-            rows={data.materials.map((m) => {
+            rows={rptMats.map((m) => {
               const shortfall = Math.max(0, m.min_stock_level - m.current_stock);
               return (
                 <tr key={m.id} className="hover:bg-slate-50">
@@ -856,7 +1101,7 @@ function ReportsPage({ data }: { data: AppData }) {
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <Table cols={['Invoice', 'Customer', 'Base Amount', 'GST', 'Total', 'Status']}
-              rows={data.invoices.map((inv) => (
+              rows={rptInvs.map((inv) => (
                 <tr key={inv.id} className="hover:bg-slate-50">
                   <td className="px-5 py-4 font-bold text-indigo-600 text-sm">{inv.invoice_no}</td>
                   <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{inv.customer_name}</td>
