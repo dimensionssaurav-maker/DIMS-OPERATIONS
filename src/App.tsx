@@ -13,6 +13,33 @@ import { Badge, StatusBadge, StatCard, Modal, FormField, Input, Sel, Btn, Table,
 import Dashboard from './pages/Dashboard';
 import { useData } from './hooks/useData';
 
+// CSV Export
+function exportCSV(fn,hdrs,rows){const e=v=>`"${String(v??'').replace(/"/g,'""')}"`;const csv=[hdrs.map(e).join(','),...rows.map(r=>r.map(e).join(','))].join('\n');const b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=fn+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(u);}
+
+// FilterBar
+function FilterBar({search,onSearch,dateFrom,onDateFrom,dateTo,onDateTo,filters=[],onExport,onClear,resultCount}){
+  const[dp,setDp]=useState(false);
+  const[qy,setQy]=useState(new Date().getFullYear().toString());
+  const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const setMR=(m,y)=>{const f=`${y}-${String(m+1).padStart(2,'0')}-01`;const l=new Date(y,m+1,0).getDate();const t=`${y}-${String(m+1).padStart(2,'0')}-${String(l).padStart(2,'0')}`;onDateFrom(f);onDateTo(t);setDp(false);};
+  const hasF=search||dateFrom||dateTo||filters.some(f=>f.value);
+  return(<div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4"><div className="flex flex-wrap gap-2 items-center">
+    <div className="relative flex-1 min-w-[180px]"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span><input value={search} onChange={e=>onSearch(e.target.value)} placeholder="Search..." className="w-full pl-8 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"/></div>
+    <div className="flex items-center gap-1"><span className="text-xs text-slate-500 font-semibold">From</span><input type="date" value={dateFrom} onChange={e=>onDateFrom(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"/></div>
+    <div className="flex items-center gap-1"><span className="text-xs text-slate-500 font-semibold">To</span><input type="date" value={dateTo} onChange={e=>onDateTo(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"/></div>
+    <div className="relative"><button onClick={()=>setDp(!dp)} className="flex items-center gap-1 text-sm border border-slate-200 rounded-xl px-3 py-2 hover:bg-slate-100 bg-slate-50 text-slate-600 font-medium">📅 Month</button>
+    {dp&&(<div className="absolute top-full left-0 mt-1 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 w-64">
+      <div className="flex items-center justify-between mb-2"><span className="text-xs font-bold text-slate-600 uppercase">Quick Select</span><select value={qy} onChange={e=>setQy(e.target.value)} className="text-xs border border-slate-200 rounded px-2 py-1 outline-none">{['2024','2025','2026','2027'].map(y=><option key={y}>{y}</option>)}</select></div>
+      <div className="grid grid-cols-4 gap-1">{MO.map((m,i)=><button key={m} onClick={()=>setMR(i,Number(qy))} className="text-xs py-1.5 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 font-medium text-slate-600">{m}</button>)}</div>
+      <div className="mt-2 pt-2 border-t border-slate-100 flex gap-1">{['Q1','Q2','Q3','Q4'].map((q,i)=><button key={q} onClick={()=>{const s=[0,3,6,9],e=[2,5,8,11];onDateFrom(new Date(Number(qy),s[i],1).toISOString().slice(0,10));onDateTo(new Date(Number(qy),e[i]+1,0).toISOString().slice(0,10));setDp(false);}} className="flex-1 text-xs py-1 rounded bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100">{q}</button>)}</div>
+    </div>)}</div>
+    {filters.map(f=><select key={f.label} value={f.value} onChange={e=>f.onChange(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 text-slate-700"><option value="">{f.label}: All</option>{f.options.map(o=><option key={o} value={o}>{o}</option>)}</select>)}
+    {hasF&&onClear&&<button onClick={onClear} className="text-xs text-rose-500 hover:text-rose-700 font-bold px-2 py-1 rounded hover:bg-rose-50">✕ Clear</button>}
+    {onExport&&<button onClick={onExport} className="flex items-center gap-1 text-sm bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 shadow-sm">⬇ CSV</button>}
+    {resultCount!==undefined&&<span className="ml-auto text-xs text-slate-400 font-medium">{resultCount} result{resultCount!==1?'s':''}</span>}
+  </div></div>);
+}
+
 // ─── CSV EXPORT ───────────────────────────────────────────────────────────────
 function exportCSV(filename, headers, rows) {
   const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
@@ -375,6 +402,8 @@ function PurchasePage({ data, setData, showToast }: { data: AppData; setData: an
   }),[data.purchaseOrders,poSrch,poStat,poSupp,poFrom,poTo]);
   const suppNames = useMemo(()=>[...new Set(data.suppliers.map(s=>s.name))],[data.suppliers]);
 
+  const [poSrch,setPoSrch]=useState('');const [poFr,setPoFr]=useState('');const [poTo,setPoTo]=useState('');const [poSt,setPoSt]=useState('');const [poSp,setPoSp]=useState('');
+  const filtPOs=useMemo(()=>data.purchaseOrders.filter(po=>{const q=poSrch.toLowerCase();if(q&&!po.po_number?.toLowerCase().includes(q)&&!po.supplier_name?.toLowerCase().includes(q))return false;if(poSt&&po.status!==poSt)return false;if(poSp&&po.supplier_name!==poSp)return false;if(poFr&&po.order_date<poFr)return false;if(poTo&&po.order_date>poTo)return false;return true;}),[data.purchaseOrders,poSrch,poSt,poSp,poFr,poTo]);
   const addSupplier = (e: React.FormEvent) => {
     e.preventDefault();
     const id = data.suppliers.length + 1;
@@ -563,6 +592,8 @@ function InventoryPage({ data, setData, showToast }: { data: AppData; setData: a
     return true;
   }), [data.materials, invSearch, invCat, invAlert]);
 
+  const [iSrch,setISrch]=useState('');const [iCat,setICat]=useState('');const [iAlrt,setIAlrt]=useState('');
+  const filtM=useMemo(()=>data.materials.filter(m=>{const q=iSrch.toLowerCase();if(q&&!m.name?.toLowerCase().includes(q)&&!m.category?.toLowerCase().includes(q))return false;if(iCat&&m.category!==iCat)return false;if(iAlrt==='Zero'&&m.current_stock!==0)return false;if(iAlrt==='Low'&&!(m.current_stock>0&&m.current_stock<=m.min_stock_level))return false;if(iAlrt==='OK'&&m.current_stock<=m.min_stock_level)return false;return true;}),[data.materials,iSrch,iCat,iAlrt]);
   const handleAdjust = (e: React.FormEvent) => {
     e.preventDefault();
     setData((d: AppData) => ({ ...d, materials: d.materials.map((m) => m.id === showAdjust.id ? { ...m, current_stock: Math.max(0, m.current_stock + Number(adj.amount)) } : m) }));
@@ -698,9 +729,9 @@ function ProductionPage({ data, setData, showToast }: { data: AppData; setData: 
         <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">● Live Tracking</span>
       </div>
       <div className="grid grid-cols-4 gap-4">
-        <StatCard title="Total Items" value={data.production.length} icon="📦" colorClass="bg-indigo-500" />
-        <StatCard title="Active" value={data.production.filter((p) => p.status === 'Active').length} icon="▶" colorClass="bg-emerald-500" />
-        <StatCard title="On Hold" value={data.production.filter((p) => p.status === 'Hold').length} icon="⏸" colorClass="bg-rose-500" />
+        <StatCard title="Total" value={rProd.length} icon="📦" colorClass="bg-indigo-500" />
+        <StatCard title="Active" value={rProd.filter(p=>p.status==='Active').length} icon="▶" colorClass="bg-emerald-500" />
+        <StatCard title="On Hold" value={rProd.filter(p=>p.status==='Hold').length} icon="⏸" colorClass="bg-rose-500" />
         <StatCard title="Ready to Dispatch" value={data.production.filter((p) => p.current_stage === STAGES[STAGES.length - 1]).length} icon="🚚" colorClass="bg-teal-500" />
       </div>
       <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl w-fit">
@@ -716,6 +747,12 @@ function ProductionPage({ data, setData, showToast }: { data: AppData; setData: 
         resultCount={items.length}
       />
       </div>
+      <FilterBar search={pSrch} onSearch={setPSrch} dateFrom={pFr} onDateFrom={setPFr} dateTo={pTo} onDateTo={setPTo}
+        filters={[{label:'Stage',value:pStg,onChange:setPStg,options:STAGES},{label:'Customer',value:pCst,onChange:setPCst,options:[...new Set(data.production.map(p=>p.customer_name))]}]}
+        onClear={()=>{setPSrch('');setPFr('');setPTo('');setPStg('');setPCst('');}}
+        onExport={()=>exportCSV('production',['Prod ID','Product','Customer','Order','Stage','Status','Qty'],items.map(p=>[p.production_id,p.product_name,p.customer_name,p.showroom_order_no,p.current_stage,p.status,p.quantity]))}
+        resultCount={items.length}
+      />
       <div className="space-y-4">
         {items.map((item) => {
           const stageIdx = STAGES.indexOf(item.current_stage);
@@ -808,6 +845,8 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
   const totalLab = filteredCosts.reduce((a, c) => a + c.labour_cost, 0);
   const totalOh = filteredCosts.reduce((a, c) => a + c.overheads, 0);
 
+  const [cSrch,setCSrch]=useState('');const [cBudg,setCBudg]=useState('');
+  const filtC=useMemo(()=>data.costing.filter(c=>{const q=cSrch.toLowerCase();if(q&&!c.production_id?.toLowerCase().includes(q)&&!c.product_name?.toLowerCase().includes(q))return false;if(cBudg==='Over'&&!(c.total_cost>c.estimated_cost))return false;if(cBudg==='Under'&&c.total_cost>c.estimated_cost)return false;return true;}),[data.costing,cSrch,cBudg]);
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-4">
@@ -908,6 +947,8 @@ function InvoicingPage({ data, setData, showToast }: { data: AppData; setData: a
 
   const totalRev = data.invoices.filter((i) => i.status === 'Paid').reduce((a, i) => a + i.total_amount, 0);
 
+  const [iSrch2,setISrch2]=useState('');const [iFr,setIFr]=useState('');const [iTo,setITo]=useState('');const [iPay,setIPay]=useState('');const [iCst,setICst]=useState('');
+  const filtInv=useMemo(()=>data.invoices.filter(i=>{const q=iSrch2.toLowerCase();if(q&&!i.invoice_no?.toLowerCase().includes(q)&&!i.customer_name?.toLowerCase().includes(q))return false;if(iPay&&i.status!==iPay)return false;if(iCst&&i.customer_name!==iCst)return false;const d=i.dispatch_date||i.created_at?.slice(0,10)||'';if(iFr&&d<iFr)return false;if(iTo&&d>iTo)return false;return true;}),[data.invoices,iSrch2,iPay,iCst,iFr,iTo]);
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-4">
@@ -1020,6 +1061,12 @@ function ReportsPage({ data }: { data: AppData }) {
           if(tab==='profit') exportCSV('rpt_profit',['Invoice','Customer','Base','GST','Total','Status'],rptInvs.map(i=>[i.invoice_no,i.customer_name,Math.round(i.total_amount/1.18),Math.round(i.gst_amount||0),Math.round(i.total_amount),i.status]));
         }}
         resultCount={tab==='production'?rptProd.length:tab==='cost'?rptCosts.length:tab==='stock'?rptMats.length:rptInvs.length}
+      />
+      <FilterBar search={rSrch} onSearch={setRSrch} dateFrom={rFr} onDateFrom={setRFr} dateTo={rTo} onDateTo={setRTo}
+        filters={tab==='production'?[{label:'Status',value:rFilt,onChange:setRFilt,options:['Active','Hold']}]:tab==='profit'?[{label:'Payment',value:rFilt,onChange:setRFilt,options:['Paid','Unpaid']}]:[]}
+        onClear={()=>{setRSrch('');setRFr('');setRTo('');setRFilt('');}}
+        onExport={()=>{if(tab==='production')exportCSV('rpt_prod',['ID','Product','Customer','Stage','Qty','Status'],rProd.map(p=>[p.production_id,p.product_name,p.customer_name,p.current_stage,p.quantity,p.status]));if(tab==='cost')exportCSV('rpt_cost',['ID','Product','Est','Mat','Lab','OH','Total'],rCost.map(c=>[c.production_id,c.product_name,c.estimated_cost,c.material_cost,c.labour_cost,c.overheads,c.total_cost]));if(tab==='stock')exportCSV('rpt_stock',['Name','Cat','Stock','Min','Status'],rMats.map(m=>[m.name,m.category,m.current_stock,m.min_stock_level,m.current_stock===0?'ZERO':m.current_stock<=m.min_stock_level?'LOW':'OK']));if(tab==='profit')exportCSV('rpt_profit',['Invoice','Customer','Base','GST','Total','Status'],rInvs.map(i=>[i.invoice_no,i.customer_name,Math.round(i.total_amount/1.18),Math.round(i.gst_amount||0),Math.round(i.total_amount),i.status]));}}
+        resultCount={tab==='production'?rProd.length:tab==='cost'?rCost.length:tab==='stock'?rMats.length:rInvs.length}
       />
       <div className="flex gap-2 flex-wrap">
         {TABS.map((t) => <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${tab === t.id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>{t.l}</button>)}
