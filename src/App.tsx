@@ -1,11 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
-      <FilterBar search={srch} onSearch={setSrch} dateFrom={dFrom} onDateFrom={setDFrom} dateTo={dTo} onDateTo={setDTo}
         filters={[{label:'Status',value:fStat,onChange:setFStat,options:['Drawing Phase','Production Ready','Dispatched']}]}
-        onClear={()=>{setSrch('');setDFrom('');setDTo('');setFStat('');}}
-        onExport={()=>exportCSV('orders',['Order No','Customer','Phone','Deadline','Amount','Status'],filteredOrders.map(o=>[o.showroom_order_no,o.customer_name,o.phone||'',o.delivery_deadline,o.amount||0,o.status]))}
-        resultCount={filteredOrders.length}
       />
 import { useAuthStore } from './store/authStore';
 import { STAGES, type AppData } from './data/seed';
