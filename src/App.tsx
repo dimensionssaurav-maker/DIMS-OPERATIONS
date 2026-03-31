@@ -1177,25 +1177,21 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
     try {
       const { db } = await import('./lib/supabase');
       const dbKey = master === 'users' ? 'erpUsers' : master;
-      const stateKey = master;
-      const dbTable = (db as Record<string, any>)[dbKey];
       if (editId) {
-        await dbTable.update(editId, form);
-        setData((d: any) => ({ ...d, [stateKey]: (d[stateKey] || []).map((x: any) => x.id === editId ? { ...x, ...form } : x) }));
+        await (db as any)[dbKey].update(editId, form);
+        setData((d: any) => ({ ...d, [master]: (d[master]||[]).map((x: any) => x.id === editId ? {...x,...form} : x) }));
         showToast('Updated! ✅');
       } else {
-        const { data: created } = await dbTable.insert(form);
-        const newItem = created ?? { ...form, id: Date.now() };
-        setData((d: any) => ({ ...d, [stateKey]: [...(d[stateKey] || []), newItem] }));
+        const { data: created } = await (db as any)[dbKey].insert(form);
+        setData((d: any) => ({ ...d, [master]: [...(d[master]||[]), created ?? {...form, id: Date.now()}] }));
         showToast('Saved to cloud! ☁️');
       }
       setShowModal(false); setEditId(null); setForm({});
-    } catch (_err) {
-      const fallbackId = (items.length || 0) + 1;
+    } catch {
       if (editId) {
-        setData((d: any) => ({ ...d, [master]: (d[master] || []).map((x: any) => x.id === editId ? { ...x, ...form } : x) }));
+        setData((d: any) => ({ ...d, [master]: (d[master]||[]).map((x: any) => x.id === editId ? {...x,...form} : x) }));
       } else {
-        setData((d: any) => ({ ...d, [master]: [...(d[master] || []), { ...form, id: fallbackId }] }));
+        setData((d: any) => ({ ...d, [master]: [...(d[master]||[]), {...form, id: (items.length||0)+1}] }));
       }
       showToast('Saved locally (cloud error)', 'error');
       setShowModal(false); setEditId(null); setForm({});
@@ -1206,12 +1202,11 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
     try {
       const { db } = await import('./lib/supabase');
       const dbKey = master === 'users' ? 'erpUsers' : master;
-      const dbTable = (db as Record<string, any>)[dbKey];
-      await dbTable.delete(id);
-      setData((d: any) => ({ ...d, [master]: (d[master] || []).filter((x: any) => x.id !== id) }));
+      await (db as any)[dbKey].delete(id);
+      setData((d: any) => ({ ...d, [master]: (d[master]||[]).filter((x: any) => x.id !== id) }));
       showToast('Deleted ✅');
-    } catch (_err) {
-      setData((d: any) => ({ ...d, [master]: (d[master] || []).filter((x: any) => x.id !== id) }));
+    } catch {
+      setData((d: any) => ({ ...d, [master]: (d[master]||[]).filter((x: any) => x.id !== id) }));
       showToast('Deleted locally', 'error');
     }
   };
