@@ -1125,49 +1125,39 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
   const items = (data as any)[master] ?? [];
   const [saving, setSaving] = useState(false);
   const save = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+    e.preventDefault(); setSaving(true);
     try {
       const { db } = await import('./lib/supabase');
-      const dbKey = master === 'users' ? 'erpUsers' : master;
+      const k = master === 'users' ? 'erpUsers' : master;
       if (editId) {
-        await (db as any)[dbKey].update(editId, form);
-        setData((d: any) => ({ ...d, [master]: (d[master]||[]).map((x: any) => x.id === editId ? {...x,...form} : x) }));
+        await (db as any)[k].update(editId, form);
+        setData((d: any) => ({ ...d, [master]: (d[master]||[]).map((x:any)=>x.id===editId?{...x,...form}:x) }));
         showToast('Updated! ✅');
       } else {
-        const { data: created } = await (db as any)[dbKey].insert(form);
-        setData((d: any) => ({ ...d, [master]: [...(d[master]||[]), created ?? {...form, id: (items.length||0)+1}] }));
+        const { data: created } = await (db as any)[k].insert(form);
+        setData((d: any) => ({ ...d, [master]: [...(d[master]||[]), created??{...form,id:Date.now()}] }));
         showToast('Saved to cloud! ☁️');
       }
       setShowModal(false); setEditId(null); setForm({});
-    } catch {
-      if (editId) {
-        setData((d: any) => ({ ...d, [master]: (d[master]||[]).map((x: any) => x.id === editId ? {...x,...form} : x) }));
-      } else {
-        setData((d: any) => ({ ...d, [master]: [...(d[master]||[]), {...form, id: (items.length||0)+1}] }));
-      }
-      showToast('Saved locally', 'error');
-      setShowModal(false); setEditId(null); setForm({});
-    }
+    } catch { showToast('Saved locally','error'); setShowModal(false); setEditId(null); setForm({}); }
     setSaving(false);
   };
   const del = async (id: number) => {
     try {
       const { db } = await import('./lib/supabase');
-      const dbKey = master === 'users' ? 'erpUsers' : master;
-      await (db as any)[dbKey].remove(id);
-      setData((d: any) => ({ ...d, [master]: (d[master]||[]).filter((x: any) => x.id !== id) }));
+      await (db as any)[master==='users'?'erpUsers':master].delete(id);
+      setData((d:any) => ({...d,[master]:(d[master]||[]).filter((x:any)=>x.id!==id)}));
       showToast('Deleted ✅');
     } catch {
-      setData((d: any) => ({ ...d, [master]: (d[master]||[]).filter((x: any) => x.id !== id) }));
-      showToast('Deleted locally', 'error');
+      setData((d:any) => ({...d,[master]:(d[master]||[]).filter((x:any)=>x.id!==id)}));
+      showToast('Deleted locally','error');
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-4">
-        <div><h1 className="text-2xl font-bold text-slate-900">Masters Management</h1><p className="text-sm text-slate-500">Configure system-wide master data · <span className="text-emerald-600 font-semibold">☁️ Cloud-synced</span></p></div>
+        <div><h1 className="text-2xl font-bold text-slate-900">Masters Management</h1><p className="text-sm text-slate-500">Configure system-wide master data</p></div>
         <Btn onClick={() => { setEditId(null); setForm({}); setShowModal(true); }}>＋ Add {MASTERS.find((m) => m.id === master)?.label.slice(0, -1)}</Btn>
       </div>
       <div className="flex gap-2 flex-wrap">
@@ -1199,7 +1189,7 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
               {master === 'employees' && (<><FormField label="Name"><Input value={form.name ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, name: v }))} /></FormField><FormField label="Employee Code"><Input value={form.employee_code ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, employee_code: v }))} /></FormField><FormField label="Designation"><Input value={form.designation ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, designation: v }))} /></FormField><FormField label="Department"><Sel value={form.department_id ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, department_id: v, department_name: data.departments.find((d) => d.id === Number(v))?.name ?? '' }))} options={data.departments.map((d) => ({ value: d.id, label: d.name }))} placeholder="Select..." /></FormField></>)}
               {master === 'suppliers' && (<><FormField label="Name"><Input value={form.name ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, name: v }))} /></FormField><FormField label="Contact"><Input value={form.contact ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, contact: v }))} /></FormField><FormField label="GST Number"><Input value={form.gst_no ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, gst_no: v }))} /></FormField><FormField label="Address"><Input value={form.address ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, address: v }))} /></FormField></>)}
               {master === 'materials' && (<><FormField label="Material Name"><Input value={form.name ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, name: v }))} /></FormField><div className="grid grid-cols-2 gap-3"><FormField label="Category"><Input value={form.category ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, category: v }))} /></FormField><FormField label="Unit"><Input value={form.unit ?? ''} onChange={(v) => setForm((p: any) => ({ ...p, unit: v }))} /></FormField></div><FormField label="Min Stock Level"><Input value={form.min_stock_level ?? 0} onChange={(v) => setForm((p: any) => ({ ...p, min_stock_level: Number(v) }))} type="number" /></FormField></>)}
-              <div className="flex gap-3 pt-2"><Btn type="submit" disabled={saving}>{saving ? '☁️ Saving...' : '☁️ Save to Cloud'}</Btn><Btn variant="secondary" onClick={() => { if(!saving){setShowModal(false);setEditId(null);setForm({});} }}>Cancel</Btn></div>
+              <div className="flex gap-3 pt-2"><Btn type="submit" disabled={saving}>{saving ? '☁️ Saving...' : 'Save'}</Btn><Btn variant="secondary" onClick={() => setShowModal(false)}>Cancel</Btn></div>
             </form>
           </Modal>
         )}
