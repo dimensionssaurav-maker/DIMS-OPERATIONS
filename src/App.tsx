@@ -1175,7 +1175,7 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
     e.preventDefault(); setSaving(true);
     try {
       const { db } = await import('./lib/supabase');
-      const key: string = master === 'users' ? 'users' : master;
+      const key = master === 'users' ? 'users' : master;
       if (editId) {
         await (db as any)[key].update(editId, form);
         setData((d: any) => ({ ...d, [key]: (d[key]||[]).map((x: any) => x.id === editId ? {...x,...form} : x) }));
@@ -1198,9 +1198,9 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
   const del = async (id: number) => {
     try {
       const { db } = await import('./lib/supabase');
-      const key2: string = master === 'users' ? 'users' : master;
-      await (db as any)[key2].delete(id);
-      setData((d: any) => ({ ...d, [key2]: (d[key2]||[]).filter((x: any) => x.id !== id) }));
+      const key = master === 'users' ? 'users' : master;
+      await (db as any)[key].delete(id);
+      setData((d: any) => ({ ...d, [key]: (d[key]||[]).filter((x: any) => x.id !== id) }));
       showToast('Deleted ✅');
     } catch {
       setData((d: any) => ({ ...d, [master]: (d[master]||[]).filter((x: any) => x.id !== id) }));
