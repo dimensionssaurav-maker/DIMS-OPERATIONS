@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const delete: (id: number) => supabase.from('materials').delete().eq('id', id), delete: (id: number) => supabase.from('suppliers').delete().eq('id', id), supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -28,7 +28,7 @@ export const db = {
   materialIssues: { getAll: () => supabase.from('material_issues').select('*').order('timestamp',{ascending:false}), insert: (r:any) => supabase.from('material_issues').insert(r).select().single(), insertMany: (rows:any[]) => supabase.from('material_issues').insert(rows).select() },
   costing: { getAll: () => supabase.from('costing').select('*').order('created_at',{ascending:false}), upsert: (r:any) => supabase.from('costing').upsert(r,{onConflict:'production_item_id'}).select().single() },
   invoices: { getAll: () => supabase.from('invoices').select('*').order('created_at',{ascending:false}), insert: (r:any) => supabase.from('invoices').insert(r).select().single(), updateStatus: (id:number,status:string) => supabase.from('invoices').update({status}).eq('id',id) },
-  erpUsers: { getAll: () => supabase.from('erp_users').select('id,name,username,role,is_active').order('name'), findByUsername: (u:string) => supabase.from('erp_users').select('*').eq('username',u).single(), insert: (r:any) => supabase.from('erp_users').insert(r).select().single(), update: (id:number,r:any) => supabase.from('erp_users').update(r).eq('id',id).select().single() },
+  erpUsers: { getAll: () => supabase.from('erp_users').select('id,name,username,role,is_active').order('name'), findByUsername: (u:string) => supabase.from('erp_users').select('*').eq('username',u).single(), insert: (r:any) => supabase.from('erp_users').insert(r).select().single(), update: (id:number,r:any) => supabase.from('erp_users').update(r).eq('id',id).select().single() delete: (id: number) => supabase.from('erp_users').delete().eq('id', id), },
   departments: { getAll: () => supabase.from('departments').select('*').order('name'), insert: (r:any) => supabase.from('departments').insert(r).select().single(), update: (id:number,r:any) => supabase.from('departments').update(r).eq('id',id).select().single(), delete: (id:number) => supabase.from('departments').delete().eq('id',id) },
   employees: { getAll: () => supabase.from('employees').select('*').order('name'), insert: (r:any) => supabase.from('employees').insert(r).select().single(), update: (id:number,r:any) => supabase.from('employees').update(r).eq('id',id).select().single(), delete: (id:number) => supabase.from('employees').delete().eq('id',id) },
 };
