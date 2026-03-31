@@ -1159,7 +1159,7 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
     try {
       const { db } = await import('./lib/supabase');
       const dbKey = master === 'users' ? 'erpUsers' : master;
-      await (db as any)[dbKey].delete(id);
+      await (db as any)[dbKey].remove(id);
       setData((d: any) => ({ ...d, [master]: (d[master]||[]).filter((x: any) => x.id !== id) }));
       showToast('Deleted ✅');
     } catch {
