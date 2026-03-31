@@ -1172,24 +1172,30 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
   const items = (data as any)[master] ?? [];
   const [saving, setSaving] = useState(false);
   const save = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true);
+    e.preventDefault();
+    setSaving(true);
     try {
       const { db } = await import('./lib/supabase');
-      const key = master === 'users' ? 'users' : master;
+      const dbKey = master === 'users' ? 'users' : master;
+      const dbTable = (db as Record<string, any>)[dbKey];
       if (editId) {
-        await (db as any)[key].update(editId, form);
-        setData((d: any) => ({ ...d, [key]: (d[key]||[]).map((x: any) => x.id === editId ? {...x,...form} : x) }));
-        showToast('Updated in cloud! ✅');
+        await dbTable.update(editId, form);
+        setData((d: any) => ({ ...d, [dbKey]: (d[dbKey] || []).map((x: any) => x.id === editId ? { ...x, ...form } : x) }));
+        showToast('Updated! ✅');
       } else {
-        const { data: created, error } = await (db as any)[key].insert(form);
-        if (error) throw error;
-        setData((d: any) => ({ ...d, [key]: [...(d[key]||[]), created ?? {...form, id: Date.now()}] }));
+        const { data: created } = await dbTable.insert(form);
+        const newItem = created ?? { ...form, id: Date.now() };
+        setData((d: any) => ({ ...d, [dbKey]: [...(d[dbKey] || []), newItem] }));
         showToast('Saved to cloud! ☁️');
       }
       setShowModal(false); setEditId(null); setForm({});
-    } catch(err: any) {
-      const id = (items.length||0)+1;
-      setData((d: any) => editId ? {...d,[master]:d[master].map((x:any)=>x.id===editId?{...x,...form}:x)} : {...d,[master]:[...(d[master]||[]),{...form,id}]});
+    } catch (_err) {
+      const fallbackId = (items.length || 0) + 1;
+      if (editId) {
+        setData((d: any) => ({ ...d, [master]: (d[master] || []).map((x: any) => x.id === editId ? { ...x, ...form } : x) }));
+      } else {
+        setData((d: any) => ({ ...d, [master]: [...(d[master] || []), { ...form, id: fallbackId }] }));
+      }
       showToast('Saved locally (cloud error)', 'error');
       setShowModal(false); setEditId(null); setForm({});
     }
@@ -1198,12 +1204,13 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
   const del = async (id: number) => {
     try {
       const { db } = await import('./lib/supabase');
-      const key = master === 'users' ? 'users' : master;
-      await (db as any)[key].delete(id);
-      setData((d: any) => ({ ...d, [key]: (d[key]||[]).filter((x: any) => x.id !== id) }));
+      const dbKey = master === 'users' ? 'users' : master;
+      const dbTable = (db as Record<string, any>)[dbKey];
+      await dbTable.delete(id);
+      setData((d: any) => ({ ...d, [dbKey]: (d[dbKey] || []).filter((x: any) => x.id !== id) }));
       showToast('Deleted ✅');
-    } catch {
-      setData((d: any) => ({ ...d, [master]: (d[master]||[]).filter((x: any) => x.id !== id) }));
+    } catch (_err) {
+      setData((d: any) => ({ ...d, [master]: (d[master] || []).filter((x: any) => x.id !== id) }));
       showToast('Deleted locally', 'error');
     }
   };
