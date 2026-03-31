@@ -1171,12 +1171,11 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
   const MASTERS = [{ id: 'departments', label: 'Departments', icon: '🏢' }, { id: 'employees', label: 'Employees', icon: '👷' }, { id: 'users', label: 'Users', icon: '🔐' }, { id: 'materials', label: 'Materials', icon: '📦' }, { id: 'suppliers', label: 'Vendors', icon: '🚚' }];
   const items = (data as any)[master] ?? [];
   const [saving, setSaving] = useState(false);
-  const TABLE_MAP: Record<string,string> = {departments:'departments',employees:'employees',users:'erp_users',materials:'materials',suppliers:'suppliers'};
   const save = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
     try {
       const { db } = await import('./lib/supabase');
-      const key = master === 'users' ? 'users' : master;
+      const key: string = master === 'users' ? 'users' : master;
       if (editId) {
         await (db as any)[key].update(editId, form);
         setData((d: any) => ({ ...d, [key]: (d[key]||[]).map((x: any) => x.id === editId ? {...x,...form} : x) }));
@@ -1199,9 +1198,9 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
   const del = async (id: number) => {
     try {
       const { db } = await import('./lib/supabase');
-      const key = master === 'users' ? 'users' : master;
-      await (db as any)[key].delete(id);
-      setData((d: any) => ({ ...d, [key]: (d[key]||[]).filter((x: any) => x.id !== id) }));
+      const key2: string = master === 'users' ? 'users' : master;
+      await (db as any)[key2].delete(id);
+      setData((d: any) => ({ ...d, [key2]: (d[key2]||[]).filter((x: any) => x.id !== id) }));
       showToast('Deleted ✅');
     } catch {
       setData((d: any) => ({ ...d, [master]: (d[master]||[]).filter((x: any) => x.id !== id) }));
