@@ -1176,16 +1176,17 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
     setSaving(true);
     try {
       const { db } = await import('./lib/supabase');
-      const dbKey = master === 'users' ? 'users' : master;
+      const dbKey = master === 'users' ? 'erpUsers' : master;
+      const stateKey = master;
       const dbTable = (db as Record<string, any>)[dbKey];
       if (editId) {
         await dbTable.update(editId, form);
-        setData((d: any) => ({ ...d, [dbKey]: (d[dbKey] || []).map((x: any) => x.id === editId ? { ...x, ...form } : x) }));
+        setData((d: any) => ({ ...d, [stateKey]: (d[stateKey] || []).map((x: any) => x.id === editId ? { ...x, ...form } : x) }));
         showToast('Updated! ✅');
       } else {
         const { data: created } = await dbTable.insert(form);
         const newItem = created ?? { ...form, id: Date.now() };
-        setData((d: any) => ({ ...d, [dbKey]: [...(d[dbKey] || []), newItem] }));
+        setData((d: any) => ({ ...d, [stateKey]: [...(d[stateKey] || []), newItem] }));
         showToast('Saved to cloud! ☁️');
       }
       setShowModal(false); setEditId(null); setForm({});
@@ -1204,10 +1205,10 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
   const del = async (id: number) => {
     try {
       const { db } = await import('./lib/supabase');
-      const dbKey = master === 'users' ? 'users' : master;
+      const dbKey = master === 'users' ? 'erpUsers' : master;
       const dbTable = (db as Record<string, any>)[dbKey];
       await dbTable.delete(id);
-      setData((d: any) => ({ ...d, [dbKey]: (d[dbKey] || []).filter((x: any) => x.id !== id) }));
+      setData((d: any) => ({ ...d, [master]: (d[master] || []).filter((x: any) => x.id !== id) }));
       showToast('Deleted ✅');
     } catch (_err) {
       setData((d: any) => ({ ...d, [master]: (d[master] || []).filter((x: any) => x.id !== id) }));
