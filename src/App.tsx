@@ -1,8 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
-        filters={[{label:'Status',value:fStat,onChange:setFStat,options:['Drawing Phase','Production Ready','Dispatched']}]}
-      />
 import { useAuthStore } from './store/authStore';
 import { STAGES, type AppData } from './data/seed';
 import { Badge, StatusBadge, StatCard, Modal, FormField, Input, Sel, Btn, Table, Toast, SidebarItem } from './components/ui';
