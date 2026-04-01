@@ -767,6 +767,153 @@ function ProductionPage({ data, setData, showToast }: { data: AppData; setData: 
   );
 }
 
+// Labour Entry Page
+function LabourEntryPage({ data, setData, showToast }: { data: AppData; setData: any; showToast: any }) {
+  const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [filterDept, setFilterDept] = useState('');
+  const [filterShift, setFilterShift] = useState('');
+  const [form, setForm] = useState({ production_item_id: '', department: '', shift: 'Morning', worker_name: '', worker_count: 1, hours_worked: 8, hourly_rate: 100, work_date: new Date().toISOString().split('T')[0], notes: '' });
+  const SHIFTS = ['Morning', 'Evening', 'Night'];
+  const depts = useMemo(() => [...new Set(data.departments.map((d: any) => d.name))], [data.departments]);
+  const labourEntries = (data as any).labourEntries ?? [];
+  const filtered = useMemo(() => labourEntries.filter((l: any) => {
+    const q = search.toLowerCase();
+    if (q && !l.production_id?.toLowerCase().includes(q) && !l.product_name?.toLowerCase().includes(q) && !l.worker_name?.toLowerCase().includes(q)) return false;
+    if (filterDept && l.department !== filterDept) return false;
+    if (filterShift && l.shift !== filterShift) return false;
+    if (dateFrom && l.work_date < dateFrom) return false;
+    if (dateTo && l.work_date > dateTo) return false;
+    return true;
+  }), [labourEntries, search, filterDept, filterShift, dateFrom, dateTo]);
+  const totalCost = filtered.reduce((a: number, l: any) => a + (l.total_cost || 0), 0);
+  const totalHours = filtered.reduce((a: number, l: any) => a + (l.hours_worked || 0) * (l.worker_count || 1), 0);
+  const save = (e: React.FormEvent) => {
+    e.preventDefault();
+    const prod = data.production.find((p) => p.id === Number(form.production_item_id));
+    if (!prod) { showToast('Select a production item', 'error'); return; }
+    const total = Number(form.worker_count) * Number(form.hours_worked) * Number(form.hourly_rate);
+    const id = labourEntries.length + 1;
+    const entry = { id, production_id: prod.production_id, production_item_id: Number(form.production_item_id), product_name: prod.product_name, department: form.department, shift: form.shift, worker_name: form.worker_name, worker_count: Number(form.worker_count), hours_worked: Number(form.hours_worked), hourly_rate: Number(form.hourly_rate), total_cost: total, work_date: form.work_date, notes: form.notes };
+    setData((d: AppData) => ({ ...d, labourEntries: [...((d as any).labourEntries ?? []), entry] }));
+    showToast('Labour entry saved! ₹' + total.toLocaleString('en-IN'));
+    setShowModal(false);
+    setForm({ production_item_id: '', department: '', shift: 'Morning', worker_name: '', worker_count: 1, hours_worked: 8, hourly_rate: 100, work_date: new Date().toISOString().split('T')[0], notes: '' });
+  };
+  const del = (id: number) => {
+    setData((d: AppData) => ({ ...d, labourEntries: ((d as any).labourEntries ?? []).filter((l: any) => l.id !== id) }));
+    showToast('Entry deleted');
+  };
+  const grouped: Record<string, any[]> = {};
+  filtered.forEach((l: any) => { if (!grouped[l.production_id]) grouped[l.production_id] = []; grouped[l.production_id].push(l); });
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div><h1 className="text-2xl font-bold text-slate-900">Labour Entry</h1><p className="text-sm text-slate-500">Shift-wise labour cost recording per production item · Feeds into Cost Sheet</p></div>
+        <Btn onClick={() => setShowModal(true)}>＋ Add Labour Entry</Btn>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Total Entries" value={filtered.length} icon="📝" colorClass="bg-indigo-500" />
+        <StatCard title="Labour Cost" value={'₹' + (totalCost/1000).toFixed(1) + 'K'} icon="💰" colorClass="bg-purple-500" />
+        <StatCard title="Man-Hours" value={totalHours + 'h'} icon="⏱️" colorClass="bg-amber-500" />
+        <StatCard title="Items Covered" value={Object.keys(grouped).length} icon="🏷️" colorClass="bg-emerald-500" />
+      </div>
+      <FilterBar search={search} onSearch={setSearch} dateFrom={dateFrom} onDateFrom={setDateFrom} dateTo={dateTo} onDateTo={setDateTo}
+        filters={[{ label: 'Department', value: filterDept, onChange: setFilterDept, options: depts as string[] }, { label: 'Shift', value: filterShift, onChange: setFilterShift, options: SHIFTS }]}
+        onClear={() => { setSearch(''); setDateFrom(''); setDateTo(''); setFilterDept(''); setFilterShift(''); }}
+        onExport={() => exportCSV('labour_entries', ['Date','Prod ID','Product','Dept','Shift','Worker','Count','Hours','Rate','Total','Notes'], filtered.map((l: any) => [l.work_date, l.production_id, l.product_name, l.department, l.shift, l.worker_name, l.worker_count, l.hours_worked, l.hourly_rate, l.total_cost, l.notes]))}
+        resultCount={filtered.length}
+      />
+      <div className="space-y-3">
+        {Object.entries(grouped).map(([prodId, entries]) => {
+          const gTotal = entries.reduce((a, l) => a + (l.total_cost||0), 0);
+          const gHours = entries.reduce((a, l) => a + (l.hours_worked||0)*(l.worker_count||1), 0);
+          return (
+            <div key={prodId} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="font-bold text-indigo-600 font-mono text-sm bg-indigo-50 px-2.5 py-1 rounded-lg">{prodId}</span>
+                  <span className="font-semibold text-slate-800 text-sm">{entries[0]?.product_name}</span>
+                </div>
+                <div className="flex gap-4 text-sm"><span className="text-slate-500">{gHours} man-hrs</span><span className="font-bold text-purple-700">₹{gTotal.toLocaleString('en-IN')}</span></div>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="border-b border-slate-100"><tr>
+                  <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Date</th>
+                  <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Shift</th>
+                  <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Dept</th>
+                  <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Worker</th>
+                  <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Workers</th>
+                  <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Hours</th>
+                  <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Rate/hr</th>
+                  <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Amount</th>
+                  <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Notes</th>
+                  <th className="px-4 py-2"></th>
+                </tr></thead>
+                <tbody>
+                  {entries.map((l: any) => (
+                    <tr key={l.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                      <td className="px-4 py-3 text-slate-500 text-xs">{l.work_date}</td>
+                      <td className="px-4 py-3"><span className={l.shift==='Morning'?'bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-bold':l.shift==='Evening'?'bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg text-xs font-bold':'bg-slate-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold'}>{l.shift==='Morning'?'🌅':l.shift==='Evening'?'🌆':'🌙'} {l.shift}</span></td>
+                      <td className="px-4 py-3 text-slate-600">{l.department}</td>
+                      <td className="px-4 py-3 font-medium text-slate-800">{l.worker_name}</td>
+                      <td className="px-4 py-3 text-right text-slate-700">{l.worker_count}</td>
+                      <td className="px-4 py-3 text-right text-slate-700">{l.hours_worked}h</td>
+                      <td className="px-4 py-3 text-right text-slate-500">₹{l.hourly_rate}/hr</td>
+                      <td className="px-4 py-3 text-right font-bold text-purple-700">₹{(l.total_cost||0).toLocaleString('en-IN')}</td>
+                      <td className="px-4 py-3 text-slate-400 text-xs">{l.notes}</td>
+                      <td className="px-4 py-3"><button onClick={() => del(l.id)} className="text-xs text-rose-400 hover:text-rose-600 font-bold">✕</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-purple-50 border-t border-purple-100"><tr><td colSpan={7} className="px-4 py-2 text-xs font-bold text-purple-700 uppercase">Subtotal — {entries.length} entries</td><td className="px-4 py-2 text-right font-bold text-purple-700">₹{gTotal.toLocaleString('en-IN')}</td><td colSpan={2}></td></tr></tfoot>
+              </table>
+            </div>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div className="p-12 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+            <div className="text-4xl mb-3">👷</div>
+            <p className="text-slate-500 font-medium">No labour entries yet</p>
+            <p className="text-slate-400 text-sm mt-1">Click "＋ Add Labour Entry" to record shift-wise labour costs</p>
+          </div>
+        )}
+      </div>
+      <AnimatePresence>
+        {showModal && (
+          <Modal title="Add Labour Entry" onClose={() => setShowModal(false)} wide>
+            <form onSubmit={save} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField label="Production Item"><Sel value={form.production_item_id} onChange={(v) => setForm((p) => ({ ...p, production_item_id: v }))} options={data.production.map((p) => ({ value: p.id, label: p.production_id + ' — ' + p.product_name }))} placeholder="Select item..." /></FormField>
+                <FormField label="Work Date"><Input value={form.work_date} onChange={(v) => setForm((p) => ({ ...p, work_date: v }))} type="date" /></FormField>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField label="Department"><Sel value={form.department} onChange={(v) => setForm((p) => ({ ...p, department: v }))} options={depts as string[]} placeholder="Select dept..." /></FormField>
+                <FormField label="Shift"><Sel value={form.shift} onChange={(v) => setForm((p) => ({ ...p, shift: v }))} options={SHIFTS} /></FormField>
+                <FormField label="Worker / Supervisor"><Input value={form.worker_name} onChange={(v) => setForm((p) => ({ ...p, worker_name: v }))} placeholder="e.g. Raju Kumar" /></FormField>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField label="No. of Workers"><Input value={form.worker_count} onChange={(v) => setForm((p) => ({ ...p, worker_count: Number(v) }))} type="number" /></FormField>
+                <FormField label="Hours Worked"><Input value={form.hours_worked} onChange={(v) => setForm((p) => ({ ...p, hours_worked: Number(v) }))} type="number" /></FormField>
+                <FormField label="Hourly Rate (₹/hr/worker)"><Input value={form.hourly_rate} onChange={(v) => setForm((p) => ({ ...p, hourly_rate: Number(v) }))} type="number" /></FormField>
+              </div>
+              <FormField label="Work Notes (optional)"><Input value={form.notes} onChange={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="e.g. Frame assembly, sanding..." /></FormField>
+              <div className="p-4 bg-purple-50 rounded-xl border border-purple-100 flex items-center justify-between">
+                <span className="text-sm text-purple-700 font-medium">Calculated Labour Cost</span>
+                <span className="text-xl font-bold text-purple-800">₹{(Number(form.worker_count)*Number(form.hours_worked)*Number(form.hourly_rate)).toLocaleString('en-IN')}</span>
+              </div>
+              <p className="text-xs text-slate-400 text-center">= {form.worker_count} workers × {form.hours_worked} hrs × ₹{form.hourly_rate}/hr</p>
+              <div className="flex gap-3 pt-2"><Btn type="submit">💾 Save Labour Entry</Btn><Btn variant="secondary" onClick={() => setShowModal(false)}>Cancel</Btn></div>
+            </form>
+          </Modal>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ─── COSTING ──────────────────────────────────────────────────────────────────
 function CostingPage({ data, setData, showToast }: { data: AppData; setData: any; showToast: any }) {
   const [showModal, setShowModal] = useState(false);
@@ -805,7 +952,7 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-4">
-        <div><h1 className="text-2xl font-bold text-slate-900">Costing Module</h1><p className="text-sm text-slate-500 italic">Material costs auto-pulled from Store Issue Slips</p></div>
+        <div><h1 className="text-2xl font-bold text-slate-900">Costing Module</h1><p className="text-sm text-slate-500 italic">Click any row ▼ to expand material & labour breakdown</p></div>
         <Btn onClick={() => { setEditId(null); setForm({ production_item_id: '', estimated_cost: 0, material_cost: 0, labour_cost: 0, overheads: 0 }); setShowModal(true); }}>＋ Add Cost Entry</Btn>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -820,31 +967,123 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
         onExport={()=>exportCSV('costing',['Prod ID','Product','Estimated','Material','Labour','Overhead','Total','Budget'],filteredCosts.map(c=>[c.production_id,c.product_name,c.estimated_cost,c.material_cost,c.labour_cost,c.overheads,c.total_cost,c.total_cost>c.estimated_cost?'Over':'Under']))}
         resultCount={filteredCosts.length}
       />
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <Table cols={['Production ID', 'Product', 'Estimated', 'Material', 'Labour', 'Overhead', 'Total', 'Status', 'Edit']}
-          rows={filteredCosts.map((c) => {
-            const status = c.total_cost > c.estimated_cost ? 'Over Budget' : 'Under Budget';
-            return (
-              <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                <td className="px-5 py-4 font-bold text-indigo-600 text-sm font-mono">{c.production_id}</td>
-                <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{c.product_name}</td>
-                <td className="px-5 py-4 text-sm text-slate-600">₹{c.estimated_cost.toLocaleString('en-IN')}</td>
-                <td className="px-5 py-4 text-sm">₹{c.material_cost.toLocaleString('en-IN')}</td>
-                <td className="px-5 py-4 text-sm">₹{c.labour_cost.toLocaleString('en-IN')}</td>
-                <td className="px-5 py-4 text-sm">₹{c.overheads.toLocaleString('en-IN')}</td>
-                <td className="px-5 py-4 text-sm font-bold text-slate-900">₹{c.total_cost.toLocaleString('en-IN')}</td>
-                <td className="px-5 py-4"><Badge label={status} color={c.total_cost > c.estimated_cost ? 'rose' : 'emerald'} /></td>
-                <td className="px-5 py-4"><Btn size="sm" variant="secondary" onClick={() => { setEditId(c.id); setForm({ production_item_id: String(c.production_item_id), estimated_cost: c.estimated_cost, material_cost: c.material_cost, labour_cost: c.labour_cost, overheads: c.overheads }); setShowModal(true); }}>Edit</Btn></td>
-              </tr>
-            );
-          })}
-        />
+      <div className="space-y-3">
+        {filteredCosting.map((c: any) => {
+          const status = c.total_cost > c.estimated_cost ? 'Over Budget' : 'Under Budget';
+          const isExp = expandedId === c.id;
+          const mats = (data as any).materialIssues.filter((m: any) => Number(m.production_item_id) === Number(c.production_item_id));
+          const labs = ((data as any).labourEntries ?? []).filter((l: any) => Number(l.production_item_id) === Number(c.production_item_id));
+          const mTot = mats.reduce((a: number, m: any) => a + (m.quantity*(m.rate_per_unit||0)), 0);
+          const lTot = labs.reduce((a: number, l: any) => a + (l.total_cost||0), 0);
+          return (
+            <div key={c.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="grid grid-cols-9 gap-1 px-5 py-4 cursor-pointer hover:bg-slate-50 transition-colors items-center" onClick={() => setExpandedId(isExp ? null : c.id)}>
+                <div className="col-span-2"><p className="font-bold text-indigo-600 text-sm font-mono">{c.production_id}</p><p className="font-semibold text-slate-900 text-sm">{c.product_name}</p></div>
+                <div className="text-right text-sm"><p className="text-[10px] text-slate-400 font-bold uppercase">Est.</p><p className="text-slate-500">{"₹"}{c.estimated_cost.toLocaleString('en-IN')}</p></div>
+                <div className="text-right text-sm text-indigo-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Material</p><p>{"₹"}{c.material_cost.toLocaleString('en-IN')}</p></div>
+                <div className="text-right text-sm text-purple-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Labour</p><p>{"₹"}{c.labour_cost.toLocaleString('en-IN')}</p></div>
+                <div className="text-right text-sm text-amber-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Overhead</p><p>{"₹"}{c.overheads.toLocaleString('en-IN')}</p></div>
+                <div className="text-right text-sm font-bold text-slate-900"><p className="text-[10px] text-slate-400 font-bold uppercase">Total</p><p>{"₹"}{c.total_cost.toLocaleString('en-IN')}</p></div>
+                <div><Badge label={status} color={c.total_cost > c.estimated_cost ? 'rose' : 'emerald'} /></div>
+                <div className="flex gap-1 justify-end items-center">
+                  <span className="text-slate-400 text-xs">{isExp ? '▲' : '▼'}</span>
+                  <Btn size="sm" variant="secondary" onClick={(e: React.MouseEvent) => { e.stopPropagation(); setEditId(c.id); setForm({ production_item_id: String(c.production_item_id), estimated_cost: c.estimated_cost, material_cost: c.material_cost, labour_cost: c.labour_cost, overheads: c.overheads }); setShowModal(true); }}>Edit</Btn>
+                </div>
+              </div>
+              {isExp && (
+                <div className="border-t border-slate-100 bg-slate-50/50 px-5 py-4 space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">{"🪵"} Materials Issued</h4>
+                      {mTot > 0 && <span className="text-xs text-indigo-600 font-bold">Calc: {"₹"}{mTot.toLocaleString('en-IN')}</span>}
+                    </div>
+                    {mats.length > 0 ? (
+                      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Material</th>
+                              <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Dept</th>
+                              <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Qty</th>
+                              <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Rate/Unit</th>
+                              <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Amount</th>
+                              <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {mats.map((m: any) => (
+                              <tr key={m.id} className="border-b border-slate-100 last:border-0">
+                                <td className="px-4 py-2 font-medium text-slate-800">{m.material_name}</td>
+                                <td className="px-4 py-2 text-slate-500">{m.department}</td>
+                                <td className="px-4 py-2 text-right text-slate-700">{m.quantity} {m.unit}</td>
+                                <td className="px-4 py-2 text-right text-slate-500">{"₹"}{m.rate_per_unit||0}/u</td>
+                                <td className="px-4 py-2 text-right font-semibold text-indigo-700">{"₹"}{((m.quantity||0)*(m.rate_per_unit||0)).toLocaleString('en-IN')}</td>
+                                <td className="px-4 py-2 text-slate-400 text-xs">{m.timestamp?.slice(0,10)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot className="bg-indigo-50 border-t border-indigo-100">
+                            <tr><td colSpan={4} className="px-4 py-2 font-bold text-indigo-700 text-xs uppercase">Material Total</td><td className="px-4 py-2 text-right font-bold text-indigo-700">{"₹"}{mTot.toLocaleString('en-IN')}</td><td></td></tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    ) : <p className="text-xs text-slate-400 italic bg-white rounded-xl border border-dashed border-slate-200 p-3">No material issues recorded yet.</p>}
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">{"👷"} Labour Entries (Shift-wise)</h4>
+                      {lTot > 0 && <span className="text-xs text-purple-600 font-bold">Calc: {"₹"}{lTot.toLocaleString('en-IN')}</span>}
+                    </div>
+                    {labs.length > 0 ? (
+                      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Date</th>
+                              <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Shift</th>
+                              <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Dept</th>
+                              <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Worker</th>
+                              <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Hrs</th>
+                              <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {labs.map((l: any) => (
+                              <tr key={l.id} className="border-b border-slate-100 last:border-0">
+                                <td className="px-4 py-2 text-slate-500 text-xs">{l.work_date}</td>
+                                <td className="px-4 py-2"><span className={l.shift==='Morning' ? 'bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-bold' : l.shift==='Evening' ? 'bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg text-xs font-bold' : 'bg-slate-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold'}>{l.shift==='Morning'?'🌅':l.shift==='Evening'?'🌆':'🌙'} {l.shift}</span></td>
+                                <td className="px-4 py-2 text-slate-500">{l.department}</td>
+                                <td className="px-4 py-2 font-medium text-slate-800">{l.worker_name} x{l.worker_count}</td>
+                                <td className="px-4 py-2 text-right text-slate-700">{l.hours_worked}h</td>
+                                <td className="px-4 py-2 text-right font-semibold text-purple-700">{"₹"}{(l.total_cost||0).toLocaleString('en-IN')}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot className="bg-purple-50 border-t border-purple-100">
+                            <tr><td colSpan={5} className="px-4 py-2 font-bold text-purple-700 text-xs uppercase">Labour Total</td><td className="px-4 py-2 text-right font-bold text-purple-700">{"₹"}{lTot.toLocaleString('en-IN')}</td></tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    ) : <p className="text-xs text-slate-400 italic bg-white rounded-xl border border-dashed border-slate-200 p-3">No labour entries. Add from {"👷"} Labour Entry page.</p>}
+                  </div>
+                  <div className="grid grid-cols-4 gap-4 bg-white rounded-xl border border-slate-200 p-4 text-center">
+                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Material</p><p className="text-lg font-bold text-indigo-700">{"₹"}{c.material_cost.toLocaleString('en-IN')}</p></div>
+                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Labour</p><p className="text-lg font-bold text-purple-700">{"₹"}{c.labour_cost.toLocaleString('en-IN')}</p></div>
+                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Overhead</p><p className="text-lg font-bold text-amber-700">{"₹"}{c.overheads.toLocaleString('en-IN')}</p></div>
+                    <div className={c.total_cost > c.estimated_cost ? 'bg-rose-50 rounded-xl p-2' : 'bg-emerald-50 rounded-xl p-2'}><p className="text-xs text-slate-400 font-bold uppercase mb-1">Total vs Est.</p><p className={c.total_cost > c.estimated_cost ? 'text-lg font-bold text-rose-700' : 'text-lg font-bold text-emerald-700'}>{"₹"}{c.total_cost.toLocaleString('en-IN')}</p><p className="text-xs text-slate-500">Est: {"₹"}{c.estimated_cost.toLocaleString('en-IN')}</p></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {filteredCosting.length === 0 && <div className="p-12 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">No cost entries yet.</div>}
       </div>
       <AnimatePresence>
         {showModal && (
           <Modal title={editId ? 'Edit Cost Entry' : 'New Cost Entry'} onClose={() => setShowModal(false)}>
             <form onSubmit={save} className="space-y-4">
-              <FormField label="Production Item"><Sel value={form.production_item_id} onChange={(v) => { const matCost = data.materialIssues.filter((i) => Number(i.production_item_id) === Number(v)).reduce((a, i) => a + i.quantity * 100, 0); setForm((f) => ({ ...f, production_item_id: v, material_cost: matCost })); }} options={data.production.map((p) => ({ value: p.id, label: `${p.production_id} — ${p.product_name}` }))} placeholder="Select..." /></FormField>
+              <FormField label="Production Item"><Sel value={form.production_item_id} onChange={(v) => { const matCost = (data as any).materialIssues.filter((i: any) => Number(i.production_item_id) === Number(v)).reduce((a: number, i: any) => a + i.quantity * (i.rate_per_unit || 0), 0); const labCost = ((data as any).labourEntries ?? []).filter((l: any) => Number(l.production_item_id) === Number(v)).reduce((a: number, l: any) => a + (l.total_cost || 0), 0); setForm((f) => ({ ...f, production_item_id: v, material_cost: matCost, labour_cost: labCost })); }} options={data.production.map((p) => ({ value: p.id, label: `${p.production_id} — ${p.product_name}` }))} placeholder="Select..." /></FormField>
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Material Cost (₹)" hint="Auto-pulled from store issues"><Input value={form.material_cost} onChange={(v) => setForm((p) => ({ ...p, material_cost: Number(v) }))} type="number" readOnly /></FormField>
                 <FormField label="Labour Cost (₹)"><Input value={form.labour_cost} onChange={(v) => setForm((p) => ({ ...p, labour_cost: Number(v) }))} type="number" /></FormField>
@@ -1277,6 +1516,7 @@ export default function App() {
     { id: 'purchase', icon: '🛒', label: 'Purchase & POs', badge: data.purchaseOrders.filter((p) => p.status === 'Draft').length, section: 'PROCUREMENT' },
     { id: 'inventory', icon: '📦', label: 'Inventory', section: null },
     { id: 'production', icon: '🏭', label: 'Production Flow', badge: data.production.filter((p) => p.status === 'Hold').length, section: 'FACTORY' },
+    { id: 'labour', icon: '👷', label: 'Labour Entry', section: null },
     { id: 'costing', icon: '💰', label: 'Costing Module', section: null },
     { id: 'invoicing', icon: '🧾', label: 'Invoicing & Sales', section: null },
     { id: 'reports', icon: '📈', label: 'Reports', section: 'ANALYTICS' },
@@ -1292,6 +1532,7 @@ export default function App() {
     purchase: <PurchasePage {...sharedProps} />,
     inventory: <InventoryPage {...sharedProps} />,
     production: <ProductionPage {...sharedProps} />,
+    labour: <LabourEntryPage {...sharedProps} />,
     costing: <CostingPage {...sharedProps} />,
     invoicing: <InvoicingPage {...sharedProps} />,
     reports: <ReportsPage data={data} />,
@@ -1366,4 +1607,6 @@ export default function App() {
       <AnimatePresence>{toast && <Toast msg={toast.msg} type={toast.type} />}</AnimatePresence>
     </div>
   );
-}
+}  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  
