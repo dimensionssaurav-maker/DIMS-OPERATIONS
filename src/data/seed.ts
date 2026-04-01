@@ -58,9 +58,14 @@ export const SEED_DATA = {
     { id: 4, po_number: 'PO-2026-0031', supplier_id: 4, supplier_name: 'ColorCoat Paints Ltd', order_date: '2026-03-02', status: 'Draft', total_amount: 14700, items: [{ material_id: 3, name: 'White Primer Paint', qty: 30, unit: 'L', unit_price: 490 }] },
   ],
   materialIssues: [
-    { id: 1, production_id: '2026-03-0001', production_item_id: 1, material_id: 1, material_name: 'Teak Wood (Grade A)', quantity: 45, unit: 'kg', department: 'Carpentry', timestamp: '2026-03-02T10:00:00' },
-    { id: 2, production_id: '2026-03-0003', production_item_id: 3, material_id: 2, material_name: 'Foam (High Density)', quantity: 8, unit: 'kg', department: 'Upholstery', timestamp: '2026-03-03T14:30:00' },
-    { id: 3, production_id: '2026-03-0004', production_item_id: 4, material_id: 6, material_name: 'Steel Rods 12mm', quantity: 12, unit: 'kg', department: 'Metal', timestamp: '2026-03-04T09:00:00' },
+    { id: 1, production_id: '2026-03-0001', production_item_id: 1, material_id: 1, material_name: 'Teak Wood (Grade A)', quantity: 45, unit: 'kg', rate_per_unit: 320, department: 'Carpentry', timestamp: '2026-03-02T10:00:00' },
+    { id: 2, production_id: '2026-03-0003', production_item_id: 3, material_id: 2, material_name: 'Foam (High Density)', quantity: 8, unit: 'kg', rate_per_unit: 450, department: 'Upholstery', timestamp: '2026-03-03T14:30:00' },
+    { id: 3, production_id: '2026-03-0004', production_item_id: 4, material_id: 6, material_name: 'Steel Rods 12mm', quantity: 12, unit: 'kg', rate_per_unit: 180, department: 'Metal', timestamp: '2026-03-04T09:00:00' },
+  ],
+  labourEntries: [
+    { id: 1, production_id: '2026-03-0001', production_item_id: 1, product_name: 'King Bed Frame', department: 'Carpentry', shift: 'Morning', worker_name: 'Raju Kumar', worker_count: 2, hours_worked: 8, hourly_rate: 120, total_cost: 1920, work_date: '2026-03-02', notes: 'Frame assembly' },
+    { id: 2, production_id: '2026-03-0001', production_item_id: 1, product_name: 'King Bed Frame', department: 'Carpentry', shift: 'Evening', worker_name: 'Suresh K', worker_count: 1, hours_worked: 6, hourly_rate: 120, total_cost: 720, work_date: '2026-03-02', notes: 'Sanding & finishing' },
+    { id: 3, production_id: '2026-03-0003', production_item_id: 3, product_name: 'L-Shape Sofa', department: 'Upholstery', shift: 'Morning', worker_name: 'Meena Iyer', worker_count: 2, hours_worked: 8, hourly_rate: 100, total_cost: 1600, work_date: '2026-03-04', notes: 'Fabric cutting & stitching' },
   ],
   costing: [
     { id: 1, production_item_id: 1, production_id: '2026-03-0001', product_name: 'King Bed Frame', estimated_cost: 22000, material_cost: 18500, labour_cost: 4200, overheads: 2100, total_cost: 24800, created_at: '2026-03-01' },
