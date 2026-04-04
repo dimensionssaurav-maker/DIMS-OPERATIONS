@@ -1,14 +1,13 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
-        filters={[{label:'Status',value:fStat,onChange:setFStat,options:['Drawing Phase','Production Ready','Dispatched']}]}
-      />
 import { useAuthStore } from './store/authStore';
 import { STAGES, type AppData } from './data/seed';
 import { Badge, StatusBadge, StatCard, Modal, FormField, Input, Sel, Btn, Table, Toast, SidebarItem } from './components/ui';
 import Dashboard from './pages/Dashboard';
 import { useData } from './hooks/useData';
 
+// ─── CSV EXPORT ───────────────────────────────────────────────────────────────
 // ─── CSV EXPORT ───────────────────────────────────────────────────────────────
 function exportCSV(filename, headers, rows) {
   const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
