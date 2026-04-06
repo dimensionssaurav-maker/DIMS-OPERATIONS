@@ -775,10 +775,15 @@ function LabourEntryPage({ data, setData, showToast }: { data: AppData; setData:
   const [dateTo, setDateTo] = useState('');
   const [filterDept, setFilterDept] = useState('');
   const [filterShift, setFilterShift] = useState('');
-  const [form, setForm] = useState({ production_item_id: '', department: '', shift: 'Morning', worker_name: '', worker_count: 1, hours_worked: 8, hourly_rate: 100, work_date: new Date().toISOString().split('T')[0], notes: '' });
+  const [form, setForm] = useState({
+    production_item_id: '', department: '', shift: 'Morning',
+    worker_name: '', worker_count: 1, hours_worked: 8,
+    hourly_rate: 100, work_date: new Date().toISOString().split('T')[0], notes: ''
+  });
   const SHIFTS = ['Morning', 'Evening', 'Night'];
-  const depts = useMemo(() => [...new Set(data.departments.map((d: any) => d.name))], [data.departments]);
-  const labourEntries = (data as any).labourEntries ?? [];
+  const depts = useMemo(() => ['Carpentry','Upholstery','Metal','Paint','QC','Dispatch'], []);
+  const labourEntries: any[] = (data as any).labourEntries ?? [];
+
   const filtered = useMemo(() => labourEntries.filter((l: any) => {
     const q = search.toLowerCase();
     if (q && !l.production_id?.toLowerCase().includes(q) && !l.product_name?.toLowerCase().includes(q) && !l.worker_name?.toLowerCase().includes(q)) return false;
@@ -788,38 +793,72 @@ function LabourEntryPage({ data, setData, showToast }: { data: AppData; setData:
     if (dateTo && l.work_date > dateTo) return false;
     return true;
   }), [labourEntries, search, filterDept, filterShift, dateFrom, dateTo]);
+
   const totalCost = filtered.reduce((a: number, l: any) => a + (l.total_cost || 0), 0);
   const totalHours = filtered.reduce((a: number, l: any) => a + (l.hours_worked || 0) * (l.worker_count || 1), 0);
+
   const save = (e: React.FormEvent) => {
     e.preventDefault();
     const prod = data.production.find((p) => p.id === Number(form.production_item_id));
     if (!prod) { showToast('Select a production item', 'error'); return; }
     const total = Number(form.worker_count) * Number(form.hours_worked) * Number(form.hourly_rate);
-    const id = labourEntries.length + 1;
-    setData((d: AppData) => ({ ...d, labourEntries: [...((d as any).labourEntries ?? []), { id, production_id: prod.production_id, production_item_id: Number(form.production_item_id), product_name: prod.product_name, department: form.department, shift: form.shift, worker_name: form.worker_name, worker_count: Number(form.worker_count), hours_worked: Number(form.hours_worked), hourly_rate: Number(form.hourly_rate), total_cost: total, work_date: form.work_date, notes: form.notes }] }));
-    showToast('Labour entry saved! \u20b9' + total.toLocaleString('en-IN'));
+    const newEntry = {
+      id: labourEntries.length + 1,
+      production_id: prod.production_id,
+      production_item_id: Number(form.production_item_id),
+      product_name: prod.product_name,
+      department: form.department,
+      shift: form.shift,
+      worker_name: form.worker_name,
+      worker_count: Number(form.worker_count),
+      hours_worked: Number(form.hours_worked),
+      hourly_rate: Number(form.hourly_rate),
+      total_cost: total,
+      work_date: form.work_date,
+      notes: form.notes,
+    };
+    setData((d: AppData) => ({ ...d, labourEntries: [...((d as any).labourEntries ?? []), newEntry] }));
+    showToast('Labour entry saved! ₹' + total.toLocaleString('en-IN'));
     setShowModal(false);
     setForm({ production_item_id: '', department: '', shift: 'Morning', worker_name: '', worker_count: 1, hours_worked: 8, hourly_rate: 100, work_date: new Date().toISOString().split('T')[0], notes: '' });
   };
-  const del = (id: number) => { setData((d: AppData) => ({ ...d, labourEntries: ((d as any).labourEntries ?? []).filter((l: any) => l.id !== id) })); showToast('Entry deleted'); };
+
+  const del = (id: number) => {
+    setData((d: AppData) => ({ ...d, labourEntries: ((d as any).labourEntries ?? []).filter((l: any) => l.id !== id) }));
+    showToast('Entry deleted');
+  };
+
   const grouped: Record<string, any[]> = {};
-  filtered.forEach((l: any) => { if (!grouped[l.production_id]) grouped[l.production_id] = []; grouped[l.production_id].push(l); });
+  filtered.forEach((l: any) => {
+    if (!grouped[l.production_id]) grouped[l.production_id] = [];
+    grouped[l.production_id].push(l);
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-4">
-        <div><h1 className="text-2xl font-bold text-slate-900">Labour Entry</h1><p className="text-sm text-slate-500">Shift-wise labour cost per item &#183; Grouped by production ID &#183; Feeds into Cost Sheet</p></div>
-        <Btn onClick={() => setShowModal(true)}>&#65291; Add Labour Entry</Btn>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Labour Entry</h1>
+          <p className="text-sm text-slate-500">Shift-wise labour cost per item · Feeds into Cost Sheet</p>
+        </div>
+        <Btn onClick={() => setShowModal(true)}>＋ Add Labour Entry</Btn>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Entries" value={filtered.length} icon="&#128221;" colorClass="bg-indigo-500" />
-        <StatCard title="Labour Cost" value={'&#8377;' + (totalCost / 1000).toFixed(1) + 'K'} icon="&#128176;" colorClass="bg-purple-500" />
-        <StatCard title="Total Man-Hours" value={totalHours + 'h'} icon="&#9200;" colorClass="bg-amber-500" />
-        <StatCard title="Items Covered" value={Object.keys(grouped).length} icon="&#127991;" colorClass="bg-emerald-500" />
+        <StatCard title="Total Entries" value={filtered.length} icon="📝" colorClass="bg-indigo-500" />
+        <StatCard title="Labour Cost" value={'₹' + (totalCost / 1000).toFixed(1) + 'K'} icon="💰" colorClass="bg-purple-500" />
+        <StatCard title="Total Man-Hours" value={totalHours + 'h'} icon="⏱️" colorClass="bg-amber-500" />
+        <StatCard title="Items Covered" value={Object.keys(grouped).length} icon="🏷️" colorClass="bg-emerald-500" />
       </div>
       <FilterBar search={search} onSearch={setSearch} dateFrom={dateFrom} onDateFrom={setDateFrom} dateTo={dateTo} onDateTo={setDateTo}
-        filters={[{ label: 'Department', value: filterDept, onChange: setFilterDept, options: depts as string[] }, { label: 'Shift', value: filterShift, onChange: setFilterShift, options: SHIFTS }]}
+        filters={[
+          { label: 'Department', value: filterDept, onChange: setFilterDept, options: depts },
+          { label: 'Shift', value: filterShift, onChange: setFilterShift, options: SHIFTS },
+        ]}
         onClear={() => { setSearch(''); setDateFrom(''); setDateTo(''); setFilterDept(''); setFilterShift(''); }}
-        onExport={() => exportCSV('labour', ['Date','Prod ID','Product','Dept','Shift','Worker','Workers','Hours','Rate','Total','Notes'], filtered.map((l: any) => [l.work_date, l.production_id, l.product_name, l.department, l.shift, l.worker_name, l.worker_count, l.hours_worked, l.hourly_rate, l.total_cost, l.notes]))}
+        onExport={() => exportCSV('labour_entries',
+          ['Date','Prod ID','Product','Dept','Shift','Worker','Workers','Hours','Rate','Total','Notes'],
+          filtered.map((l: any) => [l.work_date, l.production_id, l.product_name, l.department, l.shift, l.worker_name, l.worker_count, l.hours_worked, l.hourly_rate, l.total_cost, l.notes])
+        )}
         resultCount={filtered.length}
       />
       <div className="space-y-3">
@@ -829,68 +868,122 @@ function LabourEntryPage({ data, setData, showToast }: { data: AppData; setData:
           return (
             <div key={prodId} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                <div className="flex items-center gap-3"><span className="font-bold text-indigo-600 font-mono text-sm bg-indigo-50 px-2.5 py-1 rounded-lg">{prodId}</span><span className="font-semibold text-slate-800 text-sm">{entries[0]?.product_name}</span></div>
-                <div className="flex gap-4 text-sm"><span className="text-slate-500">{gH} man-hrs</span><span className="font-bold text-purple-700">&#8377;{gT.toLocaleString('en-IN')}</span></div>
+                <div className="flex items-center gap-3">
+                  <span className="font-bold text-indigo-600 font-mono text-sm bg-indigo-50 px-2.5 py-1 rounded-lg">{prodId}</span>
+                  <span className="font-semibold text-slate-800 text-sm">{entries[0]?.product_name}</span>
+                </div>
+                <div className="flex gap-4 text-sm">
+                  <span className="text-slate-500">{gH} man-hrs</span>
+                  <span className="font-bold text-purple-700">₹{gT.toLocaleString('en-IN')}</span>
+                </div>
               </div>
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-100"><tr>
-                  <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Date</th>
-                  <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Shift</th>
-                  <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Dept</th>
-                  <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Worker</th>
-                  <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Workers</th>
-                  <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Hours</th>
-                  <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Rate/hr</th>
-                  <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Amount</th>
-                  <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Notes</th>
-                  <th></th>
-                </tr></thead>
-                <tbody>{entries.map((l: any) => (
-                  <tr key={l.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                    <td className="px-4 py-3 text-slate-500 text-xs">{l.work_date}</td>
-                    <td className="px-4 py-3"><span className={l.shift === 'Morning' ? 'bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-bold' : l.shift === 'Evening' ? 'bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg text-xs font-bold' : 'bg-slate-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold'}>{l.shift === 'Morning' ? '&#127749;' : l.shift === 'Evening' ? '&#127750;' : '&#127769;'} {l.shift}</span></td>
-                    <td className="px-4 py-3 text-slate-600">{l.department}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">{l.worker_name}</td>
-                    <td className="px-4 py-3 text-right text-slate-700">{l.worker_count}</td>
-                    <td className="px-4 py-3 text-right text-slate-700">{l.hours_worked}h</td>
-                    <td className="px-4 py-3 text-right text-slate-500">&#8377;{l.hourly_rate}/hr</td>
-                    <td className="px-4 py-3 text-right font-bold text-purple-700">&#8377;{(l.total_cost || 0).toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{l.notes}</td>
-                    <td className="px-4 py-3"><button onClick={() => del(l.id)} className="text-xs text-rose-400 hover:text-rose-600 font-bold">&#10005;</button></td>
+                <thead className="border-b border-slate-100">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Date</th>
+                    <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Shift</th>
+                    <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Dept</th>
+                    <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Worker</th>
+                    <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Workers</th>
+                    <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Hours</th>
+                    <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Rate/hr</th>
+                    <th className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase">Notes</th>
+                    <th className="px-4 py-2"></th>
                   </tr>
-                ))}</tbody>
-                <tfoot className="bg-purple-50 border-t border-purple-100"><tr><td colSpan={7} className="px-4 py-2 text-xs font-bold text-purple-700 uppercase">Subtotal &#8212; {entries.length} entries &#183; {gH} hrs</td><td className="px-4 py-2 text-right font-bold text-purple-700">&#8377;{gT.toLocaleString('en-IN')}</td><td colSpan={2}></td></tr></tfoot>
+                </thead>
+                <tbody>
+                  {entries.map((l: any) => (
+                    <tr key={l.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                      <td className="px-4 py-3 text-slate-500 text-xs">{l.work_date}</td>
+                      <td className="px-4 py-3">
+                        <span className={l.shift === 'Morning' ? 'bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-bold' : l.shift === 'Evening' ? 'bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg text-xs font-bold' : 'bg-slate-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold'}>
+                          {l.shift === 'Morning' ? '🌅' : l.shift === 'Evening' ? '🌆' : '🌙'} {l.shift}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">{l.department}</td>
+                      <td className="px-4 py-3 font-medium text-slate-800">{l.worker_name}</td>
+                      <td className="px-4 py-3 text-right text-slate-700">{l.worker_count}</td>
+                      <td className="px-4 py-3 text-right text-slate-700">{l.hours_worked}h</td>
+                      <td className="px-4 py-3 text-right text-slate-500">₹{l.hourly_rate}/hr</td>
+                      <td className="px-4 py-3 text-right font-bold text-purple-700">₹{(l.total_cost || 0).toLocaleString('en-IN')}</td>
+                      <td className="px-4 py-3 text-slate-400 text-xs">{l.notes}</td>
+                      <td className="px-4 py-3">
+                        <button onClick={() => del(l.id)} className="text-xs text-rose-400 hover:text-rose-600 font-bold">✕</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-purple-50 border-t border-purple-100">
+                  <tr>
+                    <td colSpan={7} className="px-4 py-2 text-xs font-bold text-purple-700 uppercase">Subtotal — {entries.length} entries · {gH} hrs</td>
+                    <td className="px-4 py-2 text-right font-bold text-purple-700">₹{gT.toLocaleString('en-IN')}</td>
+                    <td colSpan={2}></td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           );
         })}
-        {filtered.length === 0 && <div className="p-12 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200"><div className="text-4xl mb-3">&#128119;</div><p className="text-slate-500 font-medium">No labour entries yet</p><p className="text-slate-400 text-sm">Click &#65291; Add Labour Entry to record shift-wise labour costs</p></div>}
+        {filtered.length === 0 && (
+          <div className="p-12 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+            <div className="text-4xl mb-3">👷</div>
+            <p className="text-slate-500 font-medium">No labour entries yet</p>
+            <p className="text-slate-400 text-sm mt-1">Click ＋ Add Labour Entry to record shift-wise labour costs</p>
+          </div>
+        )}
       </div>
       <AnimatePresence>
         {showModal && (
           <Modal title="Add Labour Entry" onClose={() => setShowModal(false)} wide>
             <form onSubmit={save} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <FormField label="Production Item"><Sel value={form.production_item_id} onChange={(v) => setForm((p) => ({ ...p, production_item_id: v }))} options={data.production.map((p) => ({ value: p.id, label: p.production_id + ' — ' + p.product_name }))} placeholder="Select item..." /></FormField>
-                <FormField label="Work Date"><Input value={form.work_date} onChange={(v) => setForm((p) => ({ ...p, work_date: v }))} type="date" /></FormField>
+                <FormField label="Production Item">
+                  <Sel value={form.production_item_id} onChange={(v) => setForm((p) => ({ ...p, production_item_id: v }))}
+                    options={data.production.map((p) => ({ value: p.id, label: p.production_id + ' — ' + p.product_name }))}
+                    placeholder="Select item..." />
+                </FormField>
+                <FormField label="Work Date">
+                  <Input value={form.work_date} onChange={(v) => setForm((p) => ({ ...p, work_date: v }))} type="date" />
+                </FormField>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <FormField label="Department"><Sel value={form.department} onChange={(v) => setForm((p) => ({ ...p, department: v }))} options={depts as string[]} placeholder="Select dept..." /></FormField>
-                <FormField label="Shift"><Sel value={form.shift} onChange={(v) => setForm((p) => ({ ...p, shift: v }))} options={SHIFTS} /></FormField>
-                <FormField label="Worker / Supervisor"><Input value={form.worker_name} onChange={(v) => setForm((p) => ({ ...p, worker_name: v }))} placeholder="e.g. Raju Kumar" /></FormField>
+                <FormField label="Department">
+                  <Sel value={form.department} onChange={(v) => setForm((p) => ({ ...p, department: v }))}
+                    options={depts} placeholder="Select dept..." />
+                </FormField>
+                <FormField label="Shift">
+                  <Sel value={form.shift} onChange={(v) => setForm((p) => ({ ...p, shift: v }))} options={SHIFTS} />
+                </FormField>
+                <FormField label="Worker Name">
+                  <Input value={form.worker_name} onChange={(v) => setForm((p) => ({ ...p, worker_name: v }))} placeholder="e.g. Raju Kumar" />
+                </FormField>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <FormField label="No. of Workers"><Input value={form.worker_count} onChange={(v) => setForm((p) => ({ ...p, worker_count: Number(v) }))} type="number" /></FormField>
-                <FormField label="Hours Worked"><Input value={form.hours_worked} onChange={(v) => setForm((p) => ({ ...p, hours_worked: Number(v) }))} type="number" /></FormField>
-                <FormField label="Hourly Rate (&#8377;/hr/worker)"><Input value={form.hourly_rate} onChange={(v) => setForm((p) => ({ ...p, hourly_rate: Number(v) }))} type="number" /></FormField>
+                <FormField label="No. of Workers">
+                  <Input value={form.worker_count} onChange={(v) => setForm((p) => ({ ...p, worker_count: Number(v) }))} type="number" />
+                </FormField>
+                <FormField label="Hours Worked">
+                  <Input value={form.hours_worked} onChange={(v) => setForm((p) => ({ ...p, hours_worked: Number(v) }))} type="number" />
+                </FormField>
+                <FormField label="Rate (₹/hr/worker)">
+                  <Input value={form.hourly_rate} onChange={(v) => setForm((p) => ({ ...p, hourly_rate: Number(v) }))} type="number" />
+                </FormField>
               </div>
-              <FormField label="Work Notes"><Input value={form.notes} onChange={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="e.g. Frame assembly, sanding..." /></FormField>
+              <FormField label="Notes (optional)">
+                <Input value={form.notes} onChange={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="e.g. Frame assembly" />
+              </FormField>
               <div className="p-4 bg-purple-50 rounded-xl border border-purple-100 flex items-center justify-between">
                 <span className="text-sm text-purple-700 font-medium">Calculated Cost</span>
-                <span className="text-xl font-bold text-purple-800">&#8377;{(Number(form.worker_count) * Number(form.hours_worked) * Number(form.hourly_rate)).toLocaleString('en-IN')}</span>
+                <span className="text-xl font-bold text-purple-800">
+                  ₹{(Number(form.worker_count) * Number(form.hours_worked) * Number(form.hourly_rate)).toLocaleString('en-IN')}
+                </span>
               </div>
-              <p className="text-xs text-slate-400 text-center">= {form.worker_count} workers &#215; {form.hours_worked} hrs &#215; &#8377;{form.hourly_rate}/hr</p>
-              <div className="flex gap-3 pt-2"><Btn type="submit">Save Labour Entry</Btn><Btn variant="secondary" onClick={() => setShowModal(false)}>Cancel</Btn></div>
+              <p className="text-xs text-slate-400 text-center">= {form.worker_count} workers × {form.hours_worked} hrs × ₹{form.hourly_rate}/hr</p>
+              <div className="flex gap-3 pt-2">
+                <Btn type="submit">Save Labour Entry</Btn>
+                <Btn variant="secondary" onClick={() => setShowModal(false)}>Cancel</Btn>
+              </div>
             </form>
           </Modal>
         )}
