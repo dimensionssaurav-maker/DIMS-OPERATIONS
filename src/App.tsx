@@ -1064,7 +1064,7 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                 <div className="text-right text-sm font-bold"><p className="text-[10px] text-slate-400 font-bold uppercase">Total</p><p className={over ? 'text-rose-700' : 'text-emerald-700'}>₹{c.total_cost.toLocaleString('en-IN')}</p></div>
                 <div><Badge label={over ? 'Over Budget' : 'Under Budget'} color={over ? 'rose' : 'emerald'} /></div>
                 <div className="flex gap-1 justify-end items-center">
-                  <span className="text-slate-400 text-xs">{isExp ? '&#9650;' : '&#9660;'}</span>
+                  <span className="text-slate-400 text-xs">{isExp ? '▲' : '▼'}</span>
                   <Btn size="sm" variant="secondary" onClick={(e: React.MouseEvent) => { e.stopPropagation(); setEditId(c.id); setForm({ production_item_id: String(c.production_item_id), estimated_cost: c.estimated_cost, material_cost: c.material_cost, labour_cost: c.labour_cost, overheads: c.overheads }); setShowModal(true); }}>Edit</Btn>
                 </div>
               </div>
@@ -1072,7 +1072,7 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                 <div className="border-t border-slate-100 bg-slate-50/50 px-5 py-4 space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">&#127987; Materials Issued</h4>
+                      <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">🏳 Materials Issued</h4>
                       {mTot > 0 && <span className="text-xs text-indigo-600 font-bold">Calc: ₹{mTot.toLocaleString('en-IN')}</span>}
                     </div>
                     {mats.length > 0 ? (
