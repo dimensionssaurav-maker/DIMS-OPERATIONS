@@ -1057,11 +1057,11 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
             <div key={c.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="grid grid-cols-9 gap-1 px-5 py-4 cursor-pointer hover:bg-slate-50 items-center" onClick={() => setExpandedId(isExp ? null : c.id)}>
                 <div className="col-span-2"><p className="font-bold text-indigo-600 text-sm font-mono">{c.production_id}</p><p className="font-semibold text-slate-900 text-sm">{c.product_name}</p></div>
-                <div className="text-right text-sm"><p className="text-[10px] text-slate-400 font-bold uppercase">Est.</p><p className="text-slate-500">&#8377;{c.estimated_cost.toLocaleString('en-IN')}</p></div>
-                <div className="text-right text-sm text-indigo-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Material</p><p>&#8377;{c.material_cost.toLocaleString('en-IN')}</p></div>
-                <div className="text-right text-sm text-purple-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Labour</p><p>&#8377;{c.labour_cost.toLocaleString('en-IN')}</p></div>
-                <div className="text-right text-sm text-amber-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Overhead</p><p>&#8377;{c.overheads.toLocaleString('en-IN')}</p></div>
-                <div className="text-right text-sm font-bold"><p className="text-[10px] text-slate-400 font-bold uppercase">Total</p><p className={over ? 'text-rose-700' : 'text-emerald-700'}>&#8377;{c.total_cost.toLocaleString('en-IN')}</p></div>
+                <div className="text-right text-sm"><p className="text-[10px] text-slate-400 font-bold uppercase">Est.</p><p className="text-slate-500">₹{c.estimated_cost.toLocaleString('en-IN')}</p></div>
+                <div className="text-right text-sm text-indigo-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Material</p><p>₹{c.material_cost.toLocaleString('en-IN')}</p></div>
+                <div className="text-right text-sm text-purple-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Labour</p><p>₹{c.labour_cost.toLocaleString('en-IN')}</p></div>
+                <div className="text-right text-sm text-amber-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Overhead</p><p>₹{c.overheads.toLocaleString('en-IN')}</p></div>
+                <div className="text-right text-sm font-bold"><p className="text-[10px] text-slate-400 font-bold uppercase">Total</p><p className={over ? 'text-rose-700' : 'text-emerald-700'}>₹{c.total_cost.toLocaleString('en-IN')}</p></div>
                 <div><Badge label={over ? 'Over Budget' : 'Under Budget'} color={over ? 'rose' : 'emerald'} /></div>
                 <div className="flex gap-1 justify-end items-center">
                   <span className="text-slate-400 text-xs">{isExp ? '&#9650;' : '&#9660;'}</span>
@@ -1073,7 +1073,7 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">&#127987; Materials Issued</h4>
-                      {mTot > 0 && <span className="text-xs text-indigo-600 font-bold">Calc: &#8377;{mTot.toLocaleString('en-IN')}</span>}
+                      {mTot > 0 && <span className="text-xs text-indigo-600 font-bold">Calc: ₹{mTot.toLocaleString('en-IN')}</span>}
                     </div>
                     {mats.length > 0 ? (
                       <table className="w-full text-sm bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -1090,14 +1090,14 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                             <td className="px-4 py-2 font-medium text-slate-800">{m.material_name}</td>
                             <td className="px-4 py-2 text-slate-500">{m.department}</td>
                             <td className="px-4 py-2 text-right text-slate-700">{m.quantity} {m.unit}</td>
-                            <td className="px-4 py-2 text-right text-slate-500">&#8377;{m.rate_per_unit || 0}/unit</td>
-                            <td className="px-4 py-2 text-right font-semibold text-indigo-700">&#8377;{((m.quantity || 0) * (m.rate_per_unit || 0)).toLocaleString('en-IN')}</td>
+                            <td className="px-4 py-2 text-right text-slate-500">₹{m.rate_per_unit || 0}/unit</td>
+                            <td className="px-4 py-2 text-right font-semibold text-indigo-700">₹{((m.quantity || 0) * (m.rate_per_unit || 0)).toLocaleString('en-IN')}</td>
                             <td className="px-4 py-2 text-slate-400 text-xs">{m.timestamp?.slice(0, 10)}</td>
                           </tr>
                         ))}</tbody>
                         <tfoot className="bg-indigo-50 border-t border-indigo-100"><tr>
                           <td colSpan={4} className="px-4 py-2 font-bold text-indigo-700 text-xs uppercase">Material Total</td>
-                          <td className="px-4 py-2 text-right font-bold text-indigo-700">&#8377;{mTot.toLocaleString('en-IN')}</td>
+                          <td className="px-4 py-2 text-right font-bold text-indigo-700">₹{mTot.toLocaleString('en-IN')}</td>
                           <td></td>
                         </tr></tfoot>
                       </table>
@@ -1105,8 +1105,8 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">&#128119; Labour Entries (Shift-wise)</h4>
-                      {lTot > 0 && <span className="text-xs text-purple-600 font-bold">Calc: &#8377;{lTot.toLocaleString('en-IN')}</span>}
+                      <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">👷 Labour Entries (Shift-wise)</h4>
+                      {lTot > 0 && <span className="text-xs text-purple-600 font-bold">Calc: ₹{lTot.toLocaleString('en-IN')}</span>}
                     </div>
                     {labs.length > 0 ? (
                       <table className="w-full text-sm bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -1122,26 +1122,26 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                         <tbody>{labs.map((l: any) => (
                           <tr key={l.id} className="border-b border-slate-100 last:border-0">
                             <td className="px-4 py-2 text-slate-500 text-xs">{l.work_date}</td>
-                            <td className="px-4 py-2"><span className={l.shift === 'Morning' ? 'bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-bold' : l.shift === 'Evening' ? 'bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg text-xs font-bold' : 'bg-slate-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold'}>{l.shift === 'Morning' ? '&#127749;' : l.shift === 'Evening' ? '&#127750;' : '&#127769;'} {l.shift}</span></td>
+                            <td className="px-4 py-2"><span className={l.shift === 'Morning' ? 'bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-bold' : l.shift === 'Evening' ? 'bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg text-xs font-bold' : 'bg-slate-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold'}>{l.shift === 'Morning' ? '🌅' : l.shift === 'Evening' ? '🌆' : '🌙'} {l.shift}</span></td>
                             <td className="px-4 py-2 text-slate-500">{l.department}</td>
                             <td className="px-4 py-2 font-medium text-slate-800">{l.worker_name}</td>
                             <td className="px-4 py-2 text-right text-slate-700">{l.worker_count}</td>
                             <td className="px-4 py-2 text-right text-slate-700">{l.hours_worked}h</td>
-                            <td className="px-4 py-2 text-right font-semibold text-purple-700">&#8377;{(l.total_cost || 0).toLocaleString('en-IN')}</td>
+                            <td className="px-4 py-2 text-right font-semibold text-purple-700">₹{(l.total_cost || 0).toLocaleString('en-IN')}</td>
                           </tr>
                         ))}</tbody>
                         <tfoot className="bg-purple-50 border-t border-purple-100"><tr>
                           <td colSpan={6} className="px-4 py-2 font-bold text-purple-700 text-xs uppercase">Labour Total</td>
-                          <td className="px-4 py-2 text-right font-bold text-purple-700">&#8377;{lTot.toLocaleString('en-IN')}</td>
+                          <td className="px-4 py-2 text-right font-bold text-purple-700">₹{lTot.toLocaleString('en-IN')}</td>
                         </tr></tfoot>
                       </table>
-                    ) : <p className="text-xs text-slate-400 italic p-3 bg-white rounded-xl border border-dashed border-slate-200">No labour entries. Add from &#128119; Labour Entry page.</p>}
+                    ) : <p className="text-xs text-slate-400 italic p-3 bg-white rounded-xl border border-dashed border-slate-200">No labour entries. Add from 👷 Labour Entry page.</p>}
                   </div>
                   <div className="grid grid-cols-4 gap-4 bg-white rounded-xl border border-slate-200 p-4 text-center">
-                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Material</p><p className="text-lg font-bold text-indigo-700">&#8377;{c.material_cost.toLocaleString('en-IN')}</p></div>
-                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Labour</p><p className="text-lg font-bold text-purple-700">&#8377;{c.labour_cost.toLocaleString('en-IN')}</p></div>
-                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Overhead</p><p className="text-lg font-bold text-amber-700">&#8377;{c.overheads.toLocaleString('en-IN')}</p></div>
-                    <div className={over ? 'bg-rose-50 rounded-xl p-2' : 'bg-emerald-50 rounded-xl p-2'}><p className="text-xs text-slate-400 font-bold uppercase mb-1">Total vs Est.</p><p className={over ? 'text-lg font-bold text-rose-700' : 'text-lg font-bold text-emerald-700'}>&#8377;{c.total_cost.toLocaleString('en-IN')}</p><p className="text-xs text-slate-500">Est: &#8377;{c.estimated_cost.toLocaleString('en-IN')}</p></div>
+                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Material</p><p className="text-lg font-bold text-indigo-700">₹{c.material_cost.toLocaleString('en-IN')}</p></div>
+                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Labour</p><p className="text-lg font-bold text-purple-700">₹{c.labour_cost.toLocaleString('en-IN')}</p></div>
+                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Overhead</p><p className="text-lg font-bold text-amber-700">₹{c.overheads.toLocaleString('en-IN')}</p></div>
+                    <div className={over ? 'bg-rose-50 rounded-xl p-2' : 'bg-emerald-50 rounded-xl p-2'}><p className="text-xs text-slate-400 font-bold uppercase mb-1">Total vs Est.</p><p className={over ? 'text-lg font-bold text-rose-700' : 'text-lg font-bold text-emerald-700'}>₹{c.total_cost.toLocaleString('en-IN')}</p><p className="text-xs text-slate-500">Est: ₹{c.estimated_cost.toLocaleString('en-IN')}</p></div>
                   </div>
                 </div>
               )}
