@@ -5,6 +5,7 @@ import { useAuthStore } from './store/authStore';
 import { STAGES, type AppData } from './data/seed';
 import { Badge, StatusBadge, StatCard, Modal, FormField, Input, Sel, Btn, Table, Toast, SidebarItem } from './components/ui';
 import Dashboard from './pages/Dashboard';
+import AuditLogPage from './pages/AuditLogPage';
 import { useData } from './hooks/useData';
 
 // ─── CSV EXPORT ───────────────────────────────────────────────────────────────
@@ -1592,6 +1593,7 @@ export default function App() {
     { id: 'reports', icon: '📈', label: 'Reports', section: 'ANALYTICS' },
     { id: 'masters', icon: '⚙️', label: 'Masters', section: 'ADMIN' },
     { id: 'settings', icon: '🔐', label: 'Settings', section: null },
+    ...(user.role === 'Admin' ? [{ id: 'audit_log', icon: '🔍', label: 'Audit Log', section: null }] : []),
   ];
 
   const sharedProps = { data, setData, showToast, actions };
@@ -1608,6 +1610,7 @@ export default function App() {
     reports: <ReportsPage data={data} />,
     masters: <MastersPage {...sharedProps} />,
     settings: <SettingsPage data={data} user={user} />,
+    audit_log: <AuditLogPage mode={mode} />,
   };
 
   return (

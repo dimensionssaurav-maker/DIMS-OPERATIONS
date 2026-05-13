@@ -84,6 +84,15 @@ export const db = {
     update: (id: number, row: any) => supabase.from('departments').update(row).eq('id', id).select().single(),
     delete: (id: number) => supabase.from('departments').delete().eq('id', id),
   },
+  auditLog: {
+    query: (params: { table_name?: string; date_from?: string; date_to?: string }) => {
+      let q = supabase.from('audit_log').select('*').order('created_at', { ascending: false }).limit(500);
+      if (params.table_name) q = q.eq('table_name', params.table_name);
+      if (params.date_from) q = q.gte('created_at', params.date_from);
+      if (params.date_to) q = q.lte('created_at', params.date_to + 'T23:59:59');
+      return q;
+    },
+  },
   employees: {
     getAll: () => supabase.from('employees').select('*').order('name'),
     insert: (row: any) => supabase.from('employees').insert(row).select().single(),
