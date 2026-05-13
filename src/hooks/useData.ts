@@ -113,6 +113,7 @@ export function useData() {
         qualityReports: qualityReports ?? [],
         wipImages: wipImages ?? [],
         aiInsights: SEED_DATA.aiInsights,
+        labourEntries: SEED_DATA.labourEntries,
       };
 
       setDataState(newData);

@@ -13,6 +13,7 @@ import OrderTrackingPage from './pages/OrderTrackingPage';
 import VendorLedgerPage from './pages/VendorLedgerPage';
 import InTransitReportPage from './pages/InTransitReportPage';
 import ConsolidatedReportPage from './pages/ConsolidatedReportPage';
+import EmployeeWorksheetPage from './pages/EmployeeWorksheetPage';
 import { useData } from './hooks/useData';
 
 // ─── CSV EXPORT ───────────────────────────────────────────────────────────────
@@ -1595,6 +1596,7 @@ export default function App() {
     { id: 'inventory', icon: '📦', label: 'Inventory', section: null },
     { id: 'production', icon: '🏭', label: 'Production Flow', badge: data.production.filter((p) => p.status === 'Hold').length, section: 'FACTORY' },
     { id: 'labour', icon: '👷', label: 'Labour Entry', section: null },
+    { id: 'employee_worksheet', icon: '📝', label: 'Employee Worksheet', section: null },
     { id: 'costing', icon: '💰', label: 'Costing Module', section: null },
     { id: 'invoicing', icon: '🧾', label: 'Invoicing & Sales', section: null },
     { id: 'quality', icon: '🔬', label: 'Quality Report', section: 'QUALITY & DISPATCH' },
@@ -1619,6 +1621,7 @@ export default function App() {
     inventory: <InventoryPage {...sharedProps} />,
     production: <ProductionPage {...sharedProps} />,
     labour: <LabourEntryPage {...sharedProps} />,
+    employee_worksheet: <EmployeeWorksheetPage {...sharedProps} />,
     costing: <CostingPage {...sharedProps} />,
     invoicing: <InvoicingPage {...sharedProps} />,
     reports: <ReportsPage data={data} />,
