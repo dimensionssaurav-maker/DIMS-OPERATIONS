@@ -98,6 +98,15 @@ export const SEED_DATA = {
     'Stage 4 (Stone/Paint) is the current bottleneck with 2 items queued. Consider adding a second shift.',
     'Wardrobe 3-Door (2026-02-0028) is Ready for Dispatch — generate GST invoice and schedule delivery.',
   ],
+  qualityReports: [
+    { id: 1, production_item_id: 4, production_id: '2026-03-0004', product_name: 'Coffee Table Round', customer_name: 'Amit Verma', qc_status: 'Pass', checked_by: 'Suresh K', remarks: 'All dimensions correct, finish excellent.', defects: '', created_at: '2026-03-10T10:00:00' },
+    { id: 2, production_item_id: 1, production_id: '2026-03-0001', product_name: 'King Bed Frame', customer_name: 'Rajesh Khanna', qc_status: 'Fail', checked_by: 'Suresh K', remarks: 'Minor surface scratches on headboard.', defects: 'Surface finish defect — requires re-sanding', created_at: '2026-03-09T14:00:00' },
+    { id: 3, production_item_id: 5, production_id: '2026-02-0028', product_name: 'Wardrobe 3-Door', customer_name: 'Amit Verma', qc_status: 'Pass', checked_by: 'Suresh K', remarks: 'All hinges aligned, finish perfect.', defects: '', created_at: '2026-03-08T11:30:00' },
+  ],
+  wipImages: [
+    { id: 1, production_item_id: 1, production_id: '2026-03-0001', product_name: 'King Bed Frame', stage: 'Stage 1: Carpentry', image_url: '', caption: 'Frame assembly in progress', uploaded_by: 'Rahul D', created_at: '2026-03-02T10:00:00' },
+    { id: 2, production_item_id: 5, production_id: '2026-02-0028', product_name: 'Wardrobe 3-Door', stage: 'Stage 7: Ready for Dispatch', image_url: '', caption: 'Final product — ready for delivery', uploaded_by: 'Rahul D', created_at: '2026-03-07T09:00:00' },
+  ],
 };
 
 export type AppData = typeof SEED_DATA;

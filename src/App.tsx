@@ -5,6 +5,14 @@ import { useAuthStore } from './store/authStore';
 import { STAGES, type AppData } from './data/seed';
 import { Badge, StatusBadge, StatCard, Modal, FormField, Input, Sel, Btn, Table, Toast, SidebarItem } from './components/ui';
 import Dashboard from './pages/Dashboard';
+import AuditLogPage from './pages/AuditLogPage';
+import QualityReportPage from './pages/QualityReportPage';
+import PackingSlipPage from './pages/PackingSlipPage';
+import WIPImagesPage from './pages/WIPImagesPage';
+import OrderTrackingPage from './pages/OrderTrackingPage';
+import VendorLedgerPage from './pages/VendorLedgerPage';
+import InTransitReportPage from './pages/InTransitReportPage';
+import ConsolidatedReportPage from './pages/ConsolidatedReportPage';
 import { useData } from './hooks/useData';
 
 // ─── CSV EXPORT ───────────────────────────────────────────────────────────────
@@ -1589,9 +1597,17 @@ export default function App() {
     { id: 'labour', icon: '👷', label: 'Labour Entry', section: null },
     { id: 'costing', icon: '💰', label: 'Costing Module', section: null },
     { id: 'invoicing', icon: '🧾', label: 'Invoicing & Sales', section: null },
-    { id: 'reports', icon: '📈', label: 'Reports', section: 'ANALYTICS' },
+    { id: 'quality', icon: '🔬', label: 'Quality Report', section: 'QUALITY & DISPATCH' },
+    { id: 'wip_images', icon: '📷', label: 'WIP Images', section: null },
+    { id: 'packing_slip', icon: '📦', label: 'Packing Slip', section: null },
+    { id: 'in_transit', icon: '🚚', label: 'In-Transit', section: null },
+    { id: 'order_tracking', icon: '🗺', label: 'Order Tracking', section: 'REPORTS' },
+    { id: 'vendor_ledger', icon: '🏢', label: 'Vendor Ledger', section: null },
+    { id: 'consolidated', icon: '📊', label: 'Consolidated Report', section: null },
+    { id: 'reports', icon: '📈', label: 'Analytics', section: null },
     { id: 'masters', icon: '⚙️', label: 'Masters', section: 'ADMIN' },
     { id: 'settings', icon: '🔐', label: 'Settings', section: null },
+    ...(user.role === 'Admin' ? [{ id: 'audit_log', icon: '🔍', label: 'Audit Log', section: null }] : []),
   ];
 
   const sharedProps = { data, setData, showToast, actions };
@@ -1608,6 +1624,14 @@ export default function App() {
     reports: <ReportsPage data={data} />,
     masters: <MastersPage {...sharedProps} />,
     settings: <SettingsPage data={data} user={user} />,
+    audit_log: <AuditLogPage mode={mode} />,
+    quality: <QualityReportPage {...sharedProps} />,
+    packing_slip: <PackingSlipPage {...sharedProps} />,
+    wip_images: <WIPImagesPage {...sharedProps} />,
+    order_tracking: <OrderTrackingPage {...sharedProps} />,
+    vendor_ledger: <VendorLedgerPage {...sharedProps} />,
+    in_transit: <InTransitReportPage {...sharedProps} />,
+    consolidated: <ConsolidatedReportPage {...sharedProps} />,
   };
 
   return (

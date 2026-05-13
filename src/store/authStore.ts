@@ -34,7 +34,11 @@ function checkDemo(username: string, password: string, set: any) {
 export const useAuthStore = create<AuthState>((set) => ({
   user: (() => { try { return JSON.parse(localStorage.getItem('erp_user') || 'null'); } catch { return null; } })(),
   setUser: (user) => { if (user) localStorage.setItem('erp_user', JSON.stringify(user)); else localStorage.removeItem('erp_user'); set({ user }); },
-  logout: () => { localStorage.removeItem('erp_user'); set({ user: null }); },
+  logout: () => {
+    localStorage.removeItem('erp_user');
+    set({ user: null });
+    supabase.auth.signOut().catch(() => {/* ignore if no active session */});
+  },
   loginWithSupabase: async (username, password) => {
     const url = import.meta.env.VITE_SUPABASE_URL;
     const isConfigured = url && url !== 'https://placeholder.supabase.co' && url !== '';

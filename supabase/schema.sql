@@ -248,6 +248,55 @@ CREATE POLICY "Allow all for anon" ON departments FOR ALL TO anon USING (true) W
 CREATE POLICY "Allow all for anon" ON employees FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all for anon" ON stock_transactions FOR ALL TO anon USING (true) WITH CHECK (true);
 
+-- ── QUALITY REPORTS ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS quality_reports (
+  id BIGSERIAL PRIMARY KEY,
+  production_item_id BIGINT NOT NULL REFERENCES production(id),
+  production_id TEXT NOT NULL,
+  product_name TEXT NOT NULL,
+  customer_name TEXT DEFAULT '',
+  qc_status TEXT DEFAULT 'Pending',  -- Pending / Pass / Fail
+  checked_by TEXT DEFAULT '',
+  remarks TEXT DEFAULT '',
+  defects TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── WIP IMAGES ───────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS wip_images (
+  id BIGSERIAL PRIMARY KEY,
+  production_item_id BIGINT NOT NULL REFERENCES production(id),
+  production_id TEXT NOT NULL,
+  product_name TEXT DEFAULT '',
+  stage TEXT DEFAULT '',
+  image_url TEXT NOT NULL,
+  caption TEXT DEFAULT '',
+  uploaded_by TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE quality_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wip_images ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for anon" ON quality_reports FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for anon" ON wip_images FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ── AUDIT LOG ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS audit_log (
+  id BIGSERIAL PRIMARY KEY,
+  table_name TEXT NOT NULL,
+  operation TEXT NOT NULL,        -- INSERT / UPDATE / DELETE
+  record_id BIGINT,
+  username TEXT NOT NULL DEFAULT '',
+  new_data JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_log_table_name ON audit_log (table_name);
+CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log (created_at DESC);
+
+ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for anon" ON audit_log FOR ALL TO anon USING (true) WITH CHECK (true);
+
 -- ============================================================
 -- SEED DATA — Initial demo records
 -- ============================================================
