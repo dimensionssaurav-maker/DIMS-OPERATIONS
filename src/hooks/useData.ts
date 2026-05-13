@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../lib/supabase';
+import { logAudit } from '../lib/auditLog';
+import { useAuthStore } from '../store/authStore';
 import { SEED_DATA, type AppData } from '../data/seed';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -53,6 +55,8 @@ export function useData() {
   const [data, setDataState] = useState<AppData>(SEED_DATA);
   const [mode, setMode] = useState<DataMode>('loading');
   const [loadingMsg, setLoadingMsg] = useState('Connecting to database...');
+  const { user } = useAuthStore();
+  const username = user?.username ?? 'system';
 
   // ── Load all data from Supabase ─────────────────────────────────────────────
   const loadFromSupabase = useCallback(async () => {
@@ -163,6 +167,7 @@ export function useData() {
         const { data: created, error } = await db.orders.insert(row);
         if (error) throw error;
         setData((d) => ({ ...d, orders: [created, ...d.orders] }));
+        logAudit({ table_name: 'orders', operation: 'INSERT', record_id: created.id, username, new_data: created });
         return created;
       } else {
         const id = Date.now();
@@ -177,6 +182,7 @@ export function useData() {
         const { data: updated, error } = await db.orders.update(id, row);
         if (error) throw error;
         setData((d) => ({ ...d, orders: d.orders.map((o) => o.id === id ? { ...o, ...updated } : o) }));
+        logAudit({ table_name: 'orders', operation: 'UPDATE', record_id: id, username, new_data: row });
       } else {
         setData((d) => ({ ...d, orders: d.orders.map((o) => o.id === id ? { ...o, ...row } : o) }));
       }
@@ -188,6 +194,7 @@ export function useData() {
         const { data: created, error } = await db.drawings.insert(row);
         if (error) throw error;
         setData((d) => ({ ...d, drawings: [created, ...d.drawings.filter((dr) => dr.order_id !== row.order_id)] }));
+        logAudit({ table_name: 'drawings', operation: 'INSERT', record_id: created.id, username, new_data: created });
         return created;
       } else {
         const id = Date.now();
@@ -202,6 +209,7 @@ export function useData() {
         const { data: updated, error } = await db.drawings.update(id, row);
         if (error) throw error;
         setData((d) => ({ ...d, drawings: d.drawings.map((dr) => dr.id === id ? { ...dr, ...updated } : dr) }));
+        logAudit({ table_name: 'drawings', operation: 'UPDATE', record_id: id, username, new_data: row });
       } else {
         setData((d) => ({ ...d, drawings: d.drawings.map((dr) => dr.id === id ? { ...dr, ...row, updated_at: new Date().toISOString() } : dr) }));
       }
@@ -213,6 +221,7 @@ export function useData() {
         const { data: created, error } = await db.library.insert(row);
         if (error) throw error;
         setData((d) => ({ ...d, library: [...d.library, { ...created, in_production_qty: 0, invoiced_qty: 0 }] }));
+        logAudit({ table_name: 'library', operation: 'INSERT', record_id: created.id, username, new_data: created });
         return created;
       } else {
         const id = Date.now();
@@ -228,6 +237,7 @@ export function useData() {
         const { data: created, error } = await db.suppliers.insert(row);
         if (error) throw error;
         setData((d) => ({ ...d, suppliers: [...d.suppliers, created] }));
+        logAudit({ table_name: 'suppliers', operation: 'INSERT', record_id: created.id, username, new_data: created });
         return created;
       } else {
         const id = Date.now();
@@ -247,6 +257,7 @@ export function useData() {
         const supplier = data.suppliers.find((s) => s.id === poRow.supplier_id);
         const fullPO = normalizePO({ ...po, supplier, items: createdItems ?? [] });
         setData((d) => ({ ...d, purchaseOrders: [fullPO, ...d.purchaseOrders] }));
+        logAudit({ table_name: 'purchase_orders', operation: 'INSERT', record_id: po.id, username, new_data: poRow });
         return fullPO;
       } else {
         const id = Date.now();
@@ -263,6 +274,7 @@ export function useData() {
         for (const item of poItems) {
           await db.materials.adjustStock(item.material_id, item.qty, `PO-${poId} received`);
         }
+        logAudit({ table_name: 'purchase_orders', operation: 'UPDATE', record_id: poId, username, new_data: { status: 'Received' } });
         await loadFromSupabase(); // refresh all data
       } else {
         setData((d) => ({
@@ -279,6 +291,7 @@ export function useData() {
     approvePO: async (poId: number) => {
       if (mode === 'supabase') {
         await db.purchaseOrders.updateStatus(poId, 'Sent');
+        logAudit({ table_name: 'purchase_orders', operation: 'UPDATE', record_id: poId, username, new_data: { status: 'Sent' } });
       }
       setData((d) => ({ ...d, purchaseOrders: d.purchaseOrders.map((p) => p.id === poId ? { ...p, status: 'Sent' } : p) }));
     },
@@ -289,6 +302,7 @@ export function useData() {
         const { data: created, error } = await db.production.insert(row);
         if (error) throw error;
         setData((d) => ({ ...d, production: [created, ...d.production] }));
+        logAudit({ table_name: 'production', operation: 'INSERT', record_id: created.id, username, new_data: created });
         return created;
       } else {
         const id = Date.now();
@@ -302,6 +316,7 @@ export function useData() {
       if (mode === 'supabase') {
         const { error } = await db.production.update(id, row);
         if (error) throw error;
+        logAudit({ table_name: 'production', operation: 'UPDATE', record_id: id, username, new_data: row });
       }
       setData((d) => ({ ...d, production: d.production.map((p) => p.id === id ? { ...p, ...row } : p) }));
     },
@@ -311,10 +326,10 @@ export function useData() {
       if (mode === 'supabase') {
         const { error } = await db.materialIssues.insertMany(rows);
         if (error) throw error;
-        // Deduct stock
         for (const row of rows) {
           await db.materials.adjustStock(row.material_id, -row.quantity, `Issued to ${row.production_id}`);
         }
+        logAudit({ table_name: 'material_issues', operation: 'INSERT', username, new_data: rows });
         await loadFromSupabase();
       } else {
         const newIssues = rows.map((r, i) => ({ ...r, id: Date.now() + i, timestamp: new Date().toISOString() }));
@@ -334,6 +349,7 @@ export function useData() {
       if (mode === 'supabase') {
         const { error } = await db.costing.upsert(row);
         if (error) throw error;
+        logAudit({ table_name: 'costing', operation: 'INSERT', username, new_data: row });
         await loadFromSupabase();
       } else {
         setData((d) => {
@@ -354,6 +370,7 @@ export function useData() {
         const { data: created, error } = await db.invoices.insert(row);
         if (error) throw error;
         setData((d) => ({ ...d, invoices: [created, ...d.invoices] }));
+        logAudit({ table_name: 'invoices', operation: 'INSERT', record_id: created.id, username, new_data: created });
         return created;
       } else {
         const id = Date.now();
@@ -366,6 +383,7 @@ export function useData() {
     markInvoicePaid: async (id: number) => {
       if (mode === 'supabase') {
         await db.invoices.updateStatus(id, 'Paid');
+        logAudit({ table_name: 'invoices', operation: 'UPDATE', record_id: id, username, new_data: { status: 'Paid' } });
       }
       setData((d) => ({ ...d, invoices: d.invoices.map((i) => i.id === id ? { ...i, status: 'Paid' } : i) }));
     },
@@ -374,6 +392,7 @@ export function useData() {
     adjustStock: async (materialId: number, delta: number, reason: string) => {
       if (mode === 'supabase') {
         await db.materials.adjustStock(materialId, delta, reason);
+        logAudit({ table_name: 'materials', operation: 'UPDATE', record_id: materialId, username, new_data: { delta, reason } });
         await loadFromSupabase();
       } else {
         setData((d) => ({ ...d, materials: d.materials.map((m) => m.id === materialId ? { ...m, current_stock: Math.max(0, m.current_stock + delta) } : m) }));
@@ -386,6 +405,7 @@ export function useData() {
         const { data: created, error } = await db.departments.insert(row);
         if (error) throw error;
         setData((d) => ({ ...d, departments: [...d.departments, created] }));
+        logAudit({ table_name: 'departments', operation: 'INSERT', record_id: created.id, username, new_data: created });
       } else {
         setData((d) => ({ ...d, departments: [...d.departments, { ...row, id: Date.now() }] }));
       }
@@ -396,6 +416,7 @@ export function useData() {
         const { data: created, error } = await db.employees.insert(row);
         if (error) throw error;
         setData((d) => ({ ...d, employees: [...d.employees, created] }));
+        logAudit({ table_name: 'employees', operation: 'INSERT', record_id: created.id, username, new_data: created });
       } else {
         setData((d) => ({ ...d, employees: [...d.employees, { ...row, id: Date.now() }] }));
       }
@@ -405,6 +426,7 @@ export function useData() {
       if (mode === 'supabase') {
         const { error } = await db.employees.update(id, row);
         if (error) throw error;
+        logAudit({ table_name: 'employees', operation: 'UPDATE', record_id: id, username, new_data: row });
       }
       setData((d) => ({ ...d, employees: d.employees.map((e) => e.id === id ? { ...e, ...row } : e) }));
     },
@@ -413,6 +435,7 @@ export function useData() {
       if (mode === 'supabase') {
         const { error } = await db.employees.delete(id);
         if (error) throw error;
+        logAudit({ table_name: 'employees', operation: 'DELETE', record_id: id, username });
       }
       setData((d) => ({ ...d, employees: d.employees.filter((e) => e.id !== id) }));
     },
@@ -422,6 +445,7 @@ export function useData() {
         const { data: created, error } = await db.materials.insert(row);
         if (error) throw error;
         setData((d) => ({ ...d, materials: [...d.materials, created] }));
+        logAudit({ table_name: 'materials', operation: 'INSERT', record_id: created.id, username, new_data: created });
       } else {
         setData((d) => ({ ...d, materials: [...d.materials, { ...row, id: Date.now(), current_stock: 0 }] }));
       }
@@ -432,6 +456,7 @@ export function useData() {
         const { data: created, error } = await db.erpUsers.insert(row);
         if (error) throw error;
         setData((d) => ({ ...d, users: [...d.users, created] }));
+        logAudit({ table_name: 'erp_users', operation: 'INSERT', record_id: created.id, username, new_data: { name: created.name, username: created.username, role: created.role } });
       } else {
         setData((d) => ({ ...d, users: [...d.users, { ...row, id: Date.now() }] }));
       }

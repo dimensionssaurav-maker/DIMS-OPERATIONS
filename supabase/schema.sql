@@ -248,6 +248,23 @@ CREATE POLICY "Allow all for anon" ON departments FOR ALL TO anon USING (true) W
 CREATE POLICY "Allow all for anon" ON employees FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all for anon" ON stock_transactions FOR ALL TO anon USING (true) WITH CHECK (true);
 
+-- ── AUDIT LOG ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS audit_log (
+  id BIGSERIAL PRIMARY KEY,
+  table_name TEXT NOT NULL,
+  operation TEXT NOT NULL,        -- INSERT / UPDATE / DELETE
+  record_id BIGINT,
+  username TEXT NOT NULL DEFAULT '',
+  new_data JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_log_table_name ON audit_log (table_name);
+CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log (created_at DESC);
+
+ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for anon" ON audit_log FOR ALL TO anon USING (true) WITH CHECK (true);
+
 -- ============================================================
 -- SEED DATA — Initial demo records
 -- ============================================================
