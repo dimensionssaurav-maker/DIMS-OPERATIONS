@@ -248,6 +248,38 @@ CREATE POLICY "Allow all for anon" ON departments FOR ALL TO anon USING (true) W
 CREATE POLICY "Allow all for anon" ON employees FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all for anon" ON stock_transactions FOR ALL TO anon USING (true) WITH CHECK (true);
 
+-- ── QUALITY REPORTS ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS quality_reports (
+  id BIGSERIAL PRIMARY KEY,
+  production_item_id BIGINT NOT NULL REFERENCES production(id),
+  production_id TEXT NOT NULL,
+  product_name TEXT NOT NULL,
+  customer_name TEXT DEFAULT '',
+  qc_status TEXT DEFAULT 'Pending',  -- Pending / Pass / Fail
+  checked_by TEXT DEFAULT '',
+  remarks TEXT DEFAULT '',
+  defects TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── WIP IMAGES ───────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS wip_images (
+  id BIGSERIAL PRIMARY KEY,
+  production_item_id BIGINT NOT NULL REFERENCES production(id),
+  production_id TEXT NOT NULL,
+  product_name TEXT DEFAULT '',
+  stage TEXT DEFAULT '',
+  image_url TEXT NOT NULL,
+  caption TEXT DEFAULT '',
+  uploaded_by TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE quality_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wip_images ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for anon" ON quality_reports FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for anon" ON wip_images FOR ALL TO anon USING (true) WITH CHECK (true);
+
 -- ── AUDIT LOG ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS audit_log (
   id BIGSERIAL PRIMARY KEY,

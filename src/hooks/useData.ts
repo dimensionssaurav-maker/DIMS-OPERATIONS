@@ -76,6 +76,8 @@ export function useData() {
         { data: users },
         { data: departments },
         { data: employees },
+        { data: qualityReports },
+        { data: wipImages },
       ] = await Promise.all([
         db.orders.getAll(),
         db.drawings.getAll(),
@@ -90,6 +92,8 @@ export function useData() {
         db.erpUsers.getAll(),
         db.departments.getAll(),
         db.employees.getAll(),
+        db.qualityReports.getAll(),
+        db.wipImages.getAll(),
       ]);
 
       const newData: AppData = {
@@ -106,6 +110,8 @@ export function useData() {
         users: users ?? [],
         departments: departments ?? [],
         employees: employees ?? [],
+        qualityReports: qualityReports ?? [],
+        wipImages: wipImages ?? [],
         aiInsights: SEED_DATA.aiInsights,
       };
 
@@ -460,6 +466,63 @@ export function useData() {
       } else {
         setData((d) => ({ ...d, users: [...d.users, { ...row, id: Date.now() }] }));
       }
+    },
+
+    // Quality Reports
+    addQualityReport: async (row: any) => {
+      if (mode === 'supabase') {
+        const { data: created, error } = await db.qualityReports.insert(row);
+        if (error) throw error;
+        setData((d) => ({ ...d, qualityReports: [created, ...d.qualityReports] }));
+        logAudit({ table_name: 'quality_reports', operation: 'INSERT', record_id: created.id, username, new_data: created });
+        return created;
+      } else {
+        const created = { ...row, id: Date.now(), created_at: new Date().toISOString() };
+        setData((d) => ({ ...d, qualityReports: [created, ...d.qualityReports] }));
+        return created;
+      }
+    },
+
+    updateQualityReport: async (id: number, row: any) => {
+      if (mode === 'supabase') {
+        const { error } = await db.qualityReports.update(id, row);
+        if (error) throw error;
+        logAudit({ table_name: 'quality_reports', operation: 'UPDATE', record_id: id, username, new_data: row });
+      }
+      setData((d) => ({ ...d, qualityReports: d.qualityReports.map((q: any) => q.id === id ? { ...q, ...row } : q) }));
+    },
+
+    deleteQualityReport: async (id: number) => {
+      if (mode === 'supabase') {
+        const { error } = await db.qualityReports.delete(id);
+        if (error) throw error;
+        logAudit({ table_name: 'quality_reports', operation: 'DELETE', record_id: id, username });
+      }
+      setData((d) => ({ ...d, qualityReports: d.qualityReports.filter((q: any) => q.id !== id) }));
+    },
+
+    // WIP Images
+    addWIPImage: async (row: any) => {
+      if (mode === 'supabase') {
+        const { data: created, error } = await db.wipImages.insert(row);
+        if (error) throw error;
+        setData((d) => ({ ...d, wipImages: [created, ...d.wipImages] }));
+        logAudit({ table_name: 'wip_images', operation: 'INSERT', record_id: created.id, username, new_data: created });
+        return created;
+      } else {
+        const created = { ...row, id: Date.now(), created_at: new Date().toISOString() };
+        setData((d) => ({ ...d, wipImages: [created, ...d.wipImages] }));
+        return created;
+      }
+    },
+
+    deleteWIPImage: async (id: number) => {
+      if (mode === 'supabase') {
+        const { error } = await db.wipImages.delete(id);
+        if (error) throw error;
+        logAudit({ table_name: 'wip_images', operation: 'DELETE', record_id: id, username });
+      }
+      setData((d) => ({ ...d, wipImages: d.wipImages.filter((w: any) => w.id !== id) }));
     },
 
     reload: loadFromSupabase,

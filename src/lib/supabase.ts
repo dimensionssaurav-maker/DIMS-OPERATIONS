@@ -84,6 +84,17 @@ export const db = {
     update: (id: number, row: any) => supabase.from('departments').update(row).eq('id', id).select().single(),
     delete: (id: number) => supabase.from('departments').delete().eq('id', id),
   },
+  qualityReports: {
+    getAll: () => supabase.from('quality_reports').select('*').order('created_at', { ascending: false }),
+    insert: (row: any) => supabase.from('quality_reports').insert(row).select().single(),
+    update: (id: number, row: any) => supabase.from('quality_reports').update(row).eq('id', id).select().single(),
+    delete: (id: number) => supabase.from('quality_reports').delete().eq('id', id),
+  },
+  wipImages: {
+    getAll: () => supabase.from('wip_images').select('*').order('created_at', { ascending: false }),
+    insert: (row: any) => supabase.from('wip_images').insert(row).select().single(),
+    delete: (id: number) => supabase.from('wip_images').delete().eq('id', id),
+  },
   auditLog: {
     query: (params: { table_name?: string; date_from?: string; date_to?: string }) => {
       let q = supabase.from('audit_log').select('*').order('created_at', { ascending: false }).limit(500);
