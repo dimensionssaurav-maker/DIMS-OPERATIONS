@@ -66,15 +66,15 @@ function FilterBar({ search, onSearch, dateFrom, onDateFrom, dateTo, onDateTo, f
       <div className="flex flex-wrap gap-2 items-center">
         <div className="relative flex-1 min-w-[180px]">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
-          <input value={search} onChange={e=>onSearch(e.target.value)} placeholder="Search..." className="w-full pl-8 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"/>
+          <input value={search} onChange={e=>onSearch(e.target.value)} placeholder="Search..." className="w-full pl-8 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-white"/>
         </div>
         <div className="flex items-center gap-1">
           <span className="text-xs text-slate-500 font-semibold">From</span>
-          <input type="date" value={dateFrom} onChange={e=>onDateFrom(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"/>
+          <input type="date" value={dateFrom} onChange={e=>onDateFrom(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-white"/>
         </div>
         <div className="flex items-center gap-1">
           <span className="text-xs text-slate-500 font-semibold">To</span>
-          <input type="date" value={dateTo} onChange={e=>onDateTo(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"/>
+          <input type="date" value={dateTo} onChange={e=>onDateTo(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-white"/>
         </div>
         <div className="relative">
           <button onClick={()=>setShowDP(!showDP)} className="flex items-center gap-1 text-sm border border-slate-200 rounded-xl px-3 py-2 hover:bg-slate-100 bg-slate-50 text-slate-600 font-medium">📅 Month</button>
@@ -104,13 +104,13 @@ function FilterBar({ search, onSearch, dateFrom, onDateFrom, dateTo, onDateTo, f
           )}
         </div>
         {filters.map(f=>(
-          <select key={f.label} value={f.value} onChange={e=>f.onChange(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 text-slate-700">
+          <select key={f.label} value={f.value} onChange={e=>f.onChange(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-white text-slate-700">
             <option value="">{f.label}: All</option>
             {f.options.map(o=><option key={o} value={o}>{o}</option>)}
           </select>
         ))}
         {hasF && onClear && <button onClick={onClear} className="text-xs text-rose-500 hover:text-rose-700 font-bold px-2 py-1 rounded-lg hover:bg-rose-50">✕ Clear</button>}
-        {onExport && <button onClick={onExport} className="flex items-center gap-1 text-sm bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 shadow-sm">⬇ Export CSV</button>}
+        {onExport && <button onClick={onExport} className="flex items-center gap-1.5 text-sm bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-4 py-2 rounded-xl font-bold hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-200/50 transition-all">⬇ Export CSV</button>}
         {resultCount!==undefined && <span className="ml-auto text-xs text-slate-400 font-medium">{resultCount} result{resultCount!==1?'s':''}</span>}
       </div>
     </div>
@@ -134,24 +134,32 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-emerald-950 flex items-center justify-center p-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white w-full max-w-md p-8 rounded-3xl shadow-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-violet-900 to-purple-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Decorative blobs */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-violet-500/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="relative bg-white/95 backdrop-blur-xl w-full max-w-md p-8 rounded-3xl shadow-2xl border border-white/30">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200 text-3xl">🪑</div>
-          <h1 className="text-2xl font-bold text-slate-900">FurniTrack ERP</h1>
-          <p className="text-slate-500 text-sm mt-1">Factory Operations Management System</p>
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-indigo-500/40 text-3xl">🪑</div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">FurniTrack ERP</h1>
+          <p className="text-slate-500 text-sm mt-1.5">Factory Operations Management System</p>
         </div>
         <form onSubmit={handle} className="space-y-4">
-          <FormField label="Username"><Input value={u} onChange={setU} placeholder="admin" /></FormField>
+          <FormField label="Username"><Input value={u} onChange={setU} placeholder="Enter username" /></FormField>
           <FormField label="Password"><Input value={p} onChange={setP} placeholder="••••••••" type="password" /></FormField>
-          {err && <div className="p-3 bg-rose-50 text-rose-600 text-sm rounded-xl border border-rose-200">{err}</div>}
-          <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 mt-2 disabled:opacity-60">
-            {loading ? 'Signing in...' : 'Sign In →'}
+          {err && (
+            <div className="p-3 bg-rose-50 text-rose-600 text-sm rounded-xl border border-rose-200 flex items-center gap-2">
+              <span className="font-bold">✗</span> {err}
+            </div>
+          )}
+          <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-3 rounded-xl font-bold hover:from-indigo-700 hover:to-violet-700 transition-all shadow-lg shadow-indigo-400/30 mt-2 disabled:opacity-60 text-sm tracking-wide">
+            {loading ? 'Signing in…' : 'Sign In →'}
           </button>
         </form>
-        <div className="mt-5 p-3 bg-slate-50 rounded-xl text-center text-xs text-slate-500 space-y-1">
-          <div>Demo: <strong>admin</strong> / <strong>admin123</strong></div>
-          <div className="text-slate-400">or rahul / priya / suresh with password "password"</div>
+        <div className="mt-5 p-3.5 bg-slate-50 rounded-2xl text-center text-xs text-slate-500 space-y-1 border border-slate-100">
+          <div className="font-medium">Demo: <strong className="text-slate-800">admin</strong> / <strong className="text-slate-800">admin123</strong></div>
+          <div className="text-slate-400">or rahul / priya / suresh — password: "password"</div>
         </div>
       </motion.div>
     </div>
@@ -1597,13 +1605,15 @@ export default function App() {
 
   if (mode === 'loading') {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto text-3xl animate-pulse">🪑</div>
-          <p className="text-slate-600 font-semibold">FurniTrack ERP</p>
-          <p className="text-slate-400 text-sm">{loadingMsg}</p>
-          <div className="flex gap-1 justify-center">
-            {[0,1,2].map(i => <div key={i} className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
+      <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-violet-900 to-purple-950 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+        <div className="relative text-center space-y-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-2xl shadow-indigo-500/40 animate-pulse">🪑</div>
+          <p className="text-white font-bold text-lg tracking-tight">FurniTrack ERP</p>
+          <p className="text-indigo-300 text-sm">{loadingMsg}</p>
+          <div className="flex gap-1.5 justify-center">
+            {[0,1,2].map(i => <div key={i} className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
           </div>
         </div>
       </div>
@@ -1720,58 +1730,82 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* SIDEBAR */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-screen z-50 overflow-y-auto">
-        <div className="p-5 flex items-center gap-3 border-b border-slate-100 shrink-0">
-          <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-lg shrink-0">🪑</div>
-          <div><p className="font-bold text-slate-900 text-sm">FurniTrack ERP</p><p className="text-[10px] text-slate-400">v2.4 · Factory Operations</p></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-white flex">
+
+      {/* ── SIDEBAR ─────────────────────────────────────────────────────────── */}
+      <aside className="w-64 flex flex-col sticky top-0 h-screen z-50 bg-white border-r border-slate-200/70 shadow-sm">
+        {/* Brand — gradient header */}
+        <div className="bg-gradient-to-br from-indigo-700 to-violet-700 px-5 py-4 flex items-center gap-3 shrink-0">
+          <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center text-xl shrink-0">🪑</div>
+          <div>
+            <p className="font-black text-white text-sm tracking-tight leading-tight">FurniTrack ERP</p>
+            <p className="text-[10px] text-indigo-200 mt-0.5">v2.4 · Factory Operations</p>
+          </div>
         </div>
-        <nav className="flex-1 p-3 space-y-0.5">
+        {/* Nav */}
+        <nav className="flex-1 p-2.5 space-y-0.5 overflow-y-auto">
           {NAV.map((item) => (
             <div key={item.id}>
-              {item.section && <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest px-3 pt-4 pb-1">{item.section}</p>}
+              {item.section && (
+                <div className="flex items-center gap-2 px-3 pt-5 pb-1.5">
+                  <p className="text-[9px] text-indigo-400 font-black uppercase tracking-widest whitespace-nowrap">{item.section}</p>
+                  <div className="flex-1 h-px bg-indigo-100/60" />
+                </div>
+              )}
               <SidebarItem icon={item.icon} label={item.label} active={page === item.id} onClick={() => setPage(item.id)} badge={item.badge} />
             </div>
           ))}
         </nav>
-        <div className="p-3 border-t border-slate-100 shrink-0">
-          <div className="flex items-center gap-3 px-3 py-2 mb-2">
-            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 font-bold text-sm shrink-0">{user.name.charAt(0)}</div>
-            <div className="flex-1 min-w-0"><p className="text-sm font-bold text-slate-900 truncate">{user.name}</p><p className="text-[10px] text-slate-400">{user.role}</p></div>
+        {/* User footer */}
+        <div className="p-3 border-t border-slate-100 shrink-0 bg-slate-50/60">
+          <div className="flex items-center gap-3 px-2 py-2 mb-1">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm">
+              {user.name.charAt(0)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-900 truncate leading-tight">{user.name}</p>
+              <p className="text-[10px] text-slate-400">{user.role}</p>
+            </div>
           </div>
-          <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-500 hover:bg-rose-50 transition-all text-sm font-bold">
-            🚪 Logout
+          <button onClick={logout} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all text-xs font-semibold">
+            🚪 Sign Out
           </button>
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* ── MAIN ────────────────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-40 shrink-0">
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <span>ERP</span><span>/</span>
+        {/* Top bar — frosted glass */}
+        <header className="h-14 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-8 flex items-center justify-between sticky top-0 z-40 shrink-0">
+          <div className="flex items-center gap-2.5 text-sm">
+            <span className="text-slate-400 font-medium">FurniTrack</span>
+            <span className="text-slate-200">/</span>
+            <span className="text-base leading-none">{NAV.find((n) => n.id === page)?.icon}</span>
             <span className="text-slate-900 font-bold">{NAV.find((n) => n.id === page)?.label}</span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> All Systems Operational
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full font-bold border border-emerald-200/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" /> All Systems Online
             </div>
-            <div className="text-sm text-slate-400 font-medium">07 Mar 2026</div>
+            <div className="text-xs text-slate-400 font-medium bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+              {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </div>
           </div>
         </header>
 
+        {/* Content */}
         <div className="flex-1 p-8 overflow-y-auto">
           <AnimatePresence mode="wait">
-            <motion.div key={page} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}>
+            <motion.div key={page} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}>
               {PAGES[page]}
             </motion.div>
           </AnimatePresence>
         </div>
 
-        <footer className="h-8 bg-white border-t border-slate-100 flex items-center px-8 gap-6 shrink-0">
-          <span className="text-[10px] font-mono flex items-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full ${mode === 'supabase' ? 'bg-emerald-500' : 'bg-amber-400'}`}></span>
+        {/* Footer */}
+        <footer className="h-9 bg-white/60 border-t border-slate-100 flex items-center px-8 gap-5 shrink-0">
+          <span className="flex items-center gap-1.5 text-[10px] font-semibold">
+            <span className={`w-1.5 h-1.5 rounded-full ${mode === 'supabase' ? 'bg-emerald-500' : 'bg-amber-400'}`} />
             <span className={mode === 'supabase' ? 'text-emerald-600' : 'text-amber-600'}>
               {mode === 'supabase' ? '☁ Supabase Cloud' : '💾 Local Storage'}
             </span>
