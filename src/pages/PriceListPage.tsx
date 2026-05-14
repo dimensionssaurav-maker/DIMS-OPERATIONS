@@ -47,9 +47,12 @@ export default function PriceListPage({ data, showToast }: Props) {
   const library    = data.library    ?? [];
   const invoices   = data.invoices   ?? [];
 
-  // filters
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo,   setDateTo]   = useState('');
+  // filters — pre-populate with current month (matches original app)
+  const today = new Date();
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
+  const todayStr = today.toISOString().slice(0, 10);
+  const [dateFrom, setDateFrom] = useState(firstOfMonth);
+  const [dateTo,   setDateTo]   = useState(todayStr);
   const [storeFilter, setStoreFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -267,16 +270,14 @@ th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppe
               {stores.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
-          <button onClick={() => { setDateFrom(''); setDateTo(''); setStoreFilter('All'); setSearch(''); setPage(1); }}
-            className="text-sm border border-slate-200 bg-white text-slate-600 px-4 py-2 rounded-xl font-semibold hover:bg-slate-50 transition-all">
-            🔍 Search
+          <button onClick={() => setPage(1)}
+            className="text-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-2 rounded-xl font-bold shadow-sm hover:from-emerald-700 hover:to-teal-700 transition-all">
+            Search
           </button>
-          {(dateFrom || dateTo || storeFilter !== 'All' || search) && (
-            <button onClick={() => { setDateFrom(''); setDateTo(''); setStoreFilter('All'); setSearch(''); setPage(1); }}
-              className="text-xs text-rose-500 font-bold px-2 py-1 hover:bg-rose-50 rounded-lg">
-              ✕ Clear
-            </button>
-          )}
+          <button onClick={() => { setDateFrom(firstOfMonth); setDateTo(todayStr); setStoreFilter('All'); setSearch(''); setPage(1); }}
+            className="text-sm border border-slate-200 bg-white text-slate-500 px-4 py-2 rounded-xl font-semibold hover:bg-slate-50 transition-all">
+            Reset
+          </button>
           <div className="ml-auto flex items-center gap-2">
             <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder="Search name / ID…"
               className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/25 bg-white w-48" />
