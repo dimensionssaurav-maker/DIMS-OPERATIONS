@@ -36,6 +36,7 @@ import MaterialHistoryPage from './pages/MaterialHistoryPage';
 import PurchaseRegisterPage from './pages/PurchaseRegisterPage';
 import MonthlySaleReportPage from './pages/MonthlySaleReportPage';
 import BillingReportPage from './pages/BillingReportPage';
+import SystemMapPage from './pages/SystemMapPage';
 import { useData } from './hooks/useData';
 
 // ─── CSV EXPORT ───────────────────────────────────────────────────────────────
@@ -1677,6 +1678,7 @@ export default function App() {
     { id: 'reports',      icon: '📈', label: 'Analytics', section: null },
 
     // ── ADMIN ─────────────────────────────────────────────
+    { id: 'system_map', icon: '🗺', label: 'System Map', section: 'REPORTS' },
     { id: 'masters',  icon: '⚙️', label: 'Masters', section: 'ADMIN' },
     { id: 'settings', icon: '🔐', label: 'Settings', section: null },
     ...(user.role === 'Admin' ? [{ id: 'audit_log', icon: '🔍', label: 'Audit Log', section: null }] : []),
@@ -1727,6 +1729,7 @@ export default function App() {
     purchase_register: <PurchaseRegisterPage {...sharedProps} />,
     monthly_sale: <MonthlySaleReportPage {...sharedProps} />,
     billing_report: <BillingReportPage {...sharedProps} />,
+    system_map: <SystemMapPage />,
   };
 
   return (
