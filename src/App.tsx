@@ -14,6 +14,13 @@ import VendorLedgerPage from './pages/VendorLedgerPage';
 import InTransitReportPage from './pages/InTransitReportPage';
 import ConsolidatedReportPage from './pages/ConsolidatedReportPage';
 import EmployeeWorksheetPage from './pages/EmployeeWorksheetPage';
+import BillingPage from './pages/BillingPage';
+import FinalizeProductionPage from './pages/FinalizeProductionPage';
+import StockOutPage from './pages/StockOutPage';
+import ProductionReportPage from './pages/ProductionReportPage';
+import RawMaterialReportPage from './pages/RawMaterialReportPage';
+import LowInventoryPage from './pages/LowInventoryPage';
+import EmployeeRecordPage from './pages/EmployeeRecordPage';
 import { useData } from './hooks/useData';
 
 // ─── CSV EXPORT ───────────────────────────────────────────────────────────────
@@ -1599,13 +1606,20 @@ export default function App() {
     { id: 'employee_worksheet', icon: '📝', label: 'Employee Worksheet', section: null },
     { id: 'costing', icon: '💰', label: 'Costing Module', section: null },
     { id: 'invoicing', icon: '🧾', label: 'Invoicing & Sales', section: null },
-    { id: 'quality', icon: '🔬', label: 'Quality Report', section: 'QUALITY & DISPATCH' },
+    { id: 'billing', icon: '💳', label: 'Billing', section: 'QUALITY & DISPATCH' },
+    { id: 'finalize_production', icon: '🏁', label: 'Finalize Production', section: null },
+    { id: 'stock_out', icon: '📤', label: 'Stock Out', section: null },
+    { id: 'quality', icon: '🔬', label: 'Quality Report', section: null },
     { id: 'wip_images', icon: '📷', label: 'WIP Images', section: null },
     { id: 'packing_slip', icon: '📦', label: 'Packing Slip', section: null },
     { id: 'in_transit', icon: '🚚', label: 'In-Transit', section: null },
     { id: 'order_tracking', icon: '🗺', label: 'Order Tracking', section: 'REPORTS' },
     { id: 'vendor_ledger', icon: '🏢', label: 'Vendor Ledger', section: null },
-    { id: 'consolidated', icon: '📊', label: 'Consolidated Report', section: null },
+    { id: 'production_report', icon: '📊', label: 'Production Report', section: null },
+    { id: 'raw_material_report', icon: '🪵', label: 'Raw Material Report', section: null },
+    { id: 'low_inventory', icon: '⚠️', label: 'Low Inventory', badge: (data.materials ?? []).filter((m) => m.current_stock <= m.min_stock_level).length || undefined, section: null },
+    { id: 'employee_record', icon: '👤', label: 'Employee Record', section: null },
+    { id: 'consolidated', icon: '📋', label: 'Consolidated Report', section: null },
     { id: 'reports', icon: '📈', label: 'Analytics', section: null },
     { id: 'masters', icon: '⚙️', label: 'Masters', section: 'ADMIN' },
     { id: 'settings', icon: '🔐', label: 'Settings', section: null },
@@ -1628,6 +1642,13 @@ export default function App() {
     masters: <MastersPage {...sharedProps} />,
     settings: <SettingsPage data={data} user={user} />,
     audit_log: <AuditLogPage mode={mode} />,
+    billing: <BillingPage {...sharedProps} />,
+    finalize_production: <FinalizeProductionPage {...sharedProps} />,
+    stock_out: <StockOutPage {...sharedProps} />,
+    production_report: <ProductionReportPage {...sharedProps} />,
+    raw_material_report: <RawMaterialReportPage {...sharedProps} />,
+    low_inventory: <LowInventoryPage {...sharedProps} />,
+    employee_record: <EmployeeRecordPage {...sharedProps} />,
     quality: <QualityReportPage {...sharedProps} />,
     packing_slip: <PackingSlipPage {...sharedProps} />,
     wip_images: <WIPImagesPage {...sharedProps} />,
