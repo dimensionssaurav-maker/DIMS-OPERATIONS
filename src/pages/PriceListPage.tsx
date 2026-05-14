@@ -37,6 +37,7 @@ type PriceRow = {
   final_rate: number;
   total_amount: number;
   final_mf: number;
+  ref: string;
 };
 
 /* ══════════════════════════════════════════════════════════════════════════ */
@@ -59,9 +60,9 @@ export default function PriceListPage({ data, showToast }: Props) {
   const [editRow, setEditRow] = useState<PriceRow | null>(null);
   const [editVal, setEditVal] = useState('');
 
-  // add modal
+  // add modal — "Select Date For Price List"
   const [showAdd, setShowAdd] = useState(false);
-  const [addForm, setAddForm] = useState({ production_item_id: '', final_rate: '' });
+  const [addDate, setAddDate] = useState('');
 
   /* ── build rows ──────────────────────────────────────────────────────── */
   const allRows = useMemo<PriceRow[]>(() => {
@@ -85,6 +86,12 @@ export default function PriceListPage({ data, showToast }: Props) {
       // production id format: modelNo@P{id padded}
       const prodIdFormatted = `${modelNo}@P${String(prod.id).padStart(4, '0')}`;
 
+      // ref: find the most recent invoice for same product_id (different production run)
+      const relatedInv = invoices.find(i => i.production_item_id !== prod.id && library.find(l => l.id === prod.product_id)?.id === prod.product_id);
+      const refModelNo = relatedInv ? (library.find(l => l.id === prod.product_id)?.sku ?? '') : '';
+      const refRate = relatedInv ? Math.round(Number(relatedInv.total_amount ?? 0) / qty) : 0;
+      const ref = refModelNo && refRate > 0 ? `${refModelNo} (${refRate.toLocaleString('en-IN')})` : '';
+
       return {
         id: prod.id,
         date: prod.created_at ?? '',
@@ -102,6 +109,7 @@ export default function PriceListPage({ data, showToast }: Props) {
         final_rate: finalRate,
         total_amount: Math.round(totalAmount),
         final_mf: finalRate > 0 && actualUnit > 0 ? parseFloat((finalRate / actualUnit).toFixed(2)) : 0,
+        ref,
       };
     });
   }, [production, library, invoices, finalRates]);
@@ -293,7 +301,7 @@ th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppe
               <tr className="bg-gradient-to-r from-slate-50 to-emerald-50/50 border-b-2 border-emerald-100/60">
                 {['Date','Production ID','Store','Model No','Name','Image','Qty',
                   'Last Rate','Actual/Unit','Total Cost','Standard Rate','Last M/F',
-                  'Final Rate','Total Amount','Final M/F','Action'].map(h => (
+                  'Final Rate','Total Amount','Final M/F','Ref','Action'].map(h => (
                   <th key={h} className="px-3 py-3.5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -301,7 +309,7 @@ th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppe
             <tbody className="divide-y divide-slate-50">
               {pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={16} className="px-5 py-14 text-center">
+                  <td colSpan={17} className="px-5 py-14 text-center">
                     <div className="flex flex-col items-center gap-2.5">
                       <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-emerald-100 rounded-2xl flex items-center justify-center text-2xl">📋</div>
                       <p className="text-slate-400 text-sm font-semibold">No records found</p>
@@ -342,10 +350,14 @@ th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppe
                       {row.final_mf > 0 ? row.final_mf.toFixed(2) : '0'}
                     </span>
                   </td>
+                  <td className="px-3 py-3 text-xs text-slate-500 whitespace-nowrap font-mono">
+                    {row.ref || <span className="text-slate-300">—</span>}
+                  </td>
                   <td className="px-3 py-3">
                     <button onClick={() => { setEditRow(row); setEditVal(String(row.final_rate)); }}
-                      className="text-xs bg-teal-600 text-white px-2.5 py-1.5 rounded-lg font-semibold hover:bg-teal-700 transition-colors whitespace-nowrap shadow-sm">
-                      ✏ Rate
+                      title="Edit Final Rate"
+                      className="w-8 h-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200 hover:border-blue-300">
+                      ✏
                     </button>
                   </td>
                 </tr>
@@ -366,6 +378,7 @@ th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppe
                   <td className="px-3 py-3 text-right font-black text-emerald-700 text-sm">₹{totals.final_rate.toLocaleString('en-IN')}</td>
                   <td className="px-3 py-3 text-right font-black text-slate-900 text-sm">₹{totals.total_amount.toLocaleString('en-IN')}</td>
                   <td className="px-3 py-3 text-center font-black text-slate-700">{totals.final_mf.toFixed(2)}</td>
+                  <td />
                   <td />
                 </tr>
               </tfoot>
@@ -451,48 +464,40 @@ th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppe
         </div>
       )}
 
-      {/* Add Entry Modal */}
+      {/* Add Modal — "Select Date For Price List" (matches original app) */}
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
           onClick={e => e.target === e.currentTarget && setShowAdd(false)}>
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-sm p-6 space-y-5">
-            <div className="flex items-center gap-3">
-              <div className="w-1 h-8 bg-gradient-to-b from-emerald-600 to-teal-600 rounded-full" />
-              <h2 className="text-base font-bold text-slate-900">Add Price Entry</h2>
-            </div>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest">Production Item</label>
-                <select value={addForm.production_item_id} onChange={e => setAddForm(f => ({ ...f, production_item_id: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 bg-white">
-                  <option value="">Select production item…</option>
-                  {production.map(p => <option key={p.id} value={p.id}>{p.production_id} — {p.product_name} ({p.customer_name})</option>)}
-                </select>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-1 h-8 bg-gradient-to-b from-emerald-600 to-teal-600 rounded-full" />
+                <h2 className="text-base font-bold text-slate-900">Select Date For Price List</h2>
               </div>
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest">Final Rate (₹)</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                  <input type="number" min="0" step="500" value={addForm.final_rate}
-                    onChange={e => setAddForm(f => ({ ...f, final_rate: e.target.value }))}
-                    className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 bg-slate-50"
-                    placeholder="Enter final rate…" />
-                </div>
-              </div>
+              <button onClick={() => setShowAdd(false)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-100 rounded-xl">✕</button>
             </div>
-            <div className="flex gap-3">
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest">Price List Date</label>
+              <input
+                type="date"
+                value={addDate}
+                onChange={e => setAddDate(e.target.value)}
+                autoFocus
+                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 bg-white"
+              />
+            </div>
+            <div className="flex justify-end gap-3">
               <button onClick={() => setShowAdd(false)}
-                className="flex-1 px-4 py-2.5 text-sm text-slate-600 font-semibold border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
+                className="px-4 py-2.5 text-sm text-slate-600 font-semibold border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                Cancel
+              </button>
               <button onClick={() => {
-                const id = parseInt(addForm.production_item_id);
-                const rate = parseFloat(addForm.final_rate);
-                if (!id || isNaN(rate) || rate < 0) { showToast('Fill in all fields correctly', 'error'); return; }
-                setFinalRates(prev => ({ ...prev, [id]: rate }));
-                showToast('Price entry added!');
+                if (!addDate) { showToast('Please select a date', 'error'); return; }
+                showToast(`Price list generated for ${addDate}!`);
                 setShowAdd(false);
-                setAddForm({ production_item_id: '', final_rate: '' });
-              }} className="flex-1 px-4 py-2.5 text-sm text-white font-bold bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl hover:from-emerald-700 hover:to-teal-700 shadow-sm transition-all">
-                Add
+                setAddDate('');
+              }} className="px-6 py-2.5 text-sm text-white font-bold bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl hover:from-emerald-700 hover:to-teal-700 shadow-sm transition-all">
+                Submit
               </button>
             </div>
           </div>
