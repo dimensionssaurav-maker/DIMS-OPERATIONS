@@ -21,6 +21,21 @@ import ProductionReportPage from './pages/ProductionReportPage';
 import RawMaterialReportPage from './pages/RawMaterialReportPage';
 import LowInventoryPage from './pages/LowInventoryPage';
 import EmployeeRecordPage from './pages/EmployeeRecordPage';
+import RRPCalculationPage from './pages/RRPCalculationPage';
+import PackingListPage from './pages/PackingListPage';
+import ProductionShowroomWisePage from './pages/ProductionShowroomWisePage';
+import PriceListPage from './pages/PriceListPage';
+import CCSPage from './pages/CCSPage';
+import HandToolPage from './pages/HandToolPage';
+import VendorPaymentDuePage from './pages/VendorPaymentDuePage';
+import PCCPage from './pages/PCCPage';
+import IncreasedCostItemPage from './pages/IncreasedCostItemPage';
+import RawMaterialUsesReportPage from './pages/RawMaterialUsesReportPage';
+import ReadyProductPage from './pages/ReadyProductPage';
+import MaterialHistoryPage from './pages/MaterialHistoryPage';
+import PurchaseRegisterPage from './pages/PurchaseRegisterPage';
+import MonthlySaleReportPage from './pages/MonthlySaleReportPage';
+import BillingReportPage from './pages/BillingReportPage';
 import { useData } from './hooks/useData';
 
 // ─── CSV EXPORT ───────────────────────────────────────────────────────────────
@@ -1620,6 +1635,21 @@ export default function App() {
     { id: 'low_inventory', icon: '⚠️', label: 'Low Inventory', badge: (data.materials ?? []).filter((m) => m.current_stock <= m.min_stock_level).length || undefined, section: null },
     { id: 'employee_record', icon: '👤', label: 'Employee Record', section: null },
     { id: 'consolidated', icon: '📋', label: 'Consolidated Report', section: null },
+    { id: 'rrp_calculation', icon: '🔧', label: 'RRP Calculation', section: null },
+    { id: 'packing_list', icon: '📦', label: 'Packing List', section: null },
+    { id: 'production_showroom', icon: '🏪', label: 'Showroom Wise', section: null },
+    { id: 'price_list', icon: '💰', label: 'Price List', section: null },
+    { id: 'ccs', icon: '📋', label: 'CCS', section: null },
+    { id: 'pcc', icon: '📊', label: 'PCC', section: null },
+    { id: 'increased_cost', icon: '📈', label: 'Increased Cost Items', section: null },
+    { id: 'hand_tool', icon: '🔨', label: 'Hand Tools', section: null },
+    { id: 'vendor_payment_due', icon: '💸', label: 'Vendor Payment Due', section: null },
+    { id: 'raw_material_uses', icon: '🪵', label: 'Raw Material Uses', section: null },
+    { id: 'ready_product', icon: '✅', label: 'Ready Product', section: null },
+    { id: 'material_history', icon: '📜', label: 'Material History', section: null },
+    { id: 'purchase_register', icon: '🗂️', label: 'Purchase Register', section: null },
+    { id: 'monthly_sale', icon: '📅', label: 'Monthly Sale Report', section: null },
+    { id: 'billing_report', icon: '🧾', label: 'Billing Report', section: null },
     { id: 'reports', icon: '📈', label: 'Analytics', section: null },
     { id: 'masters', icon: '⚙️', label: 'Masters', section: 'ADMIN' },
     { id: 'settings', icon: '🔐', label: 'Settings', section: null },
@@ -1656,6 +1686,21 @@ export default function App() {
     vendor_ledger: <VendorLedgerPage {...sharedProps} />,
     in_transit: <InTransitReportPage {...sharedProps} />,
     consolidated: <ConsolidatedReportPage {...sharedProps} />,
+    rrp_calculation: <RRPCalculationPage {...sharedProps} />,
+    packing_list: <PackingListPage {...sharedProps} />,
+    production_showroom: <ProductionShowroomWisePage {...sharedProps} />,
+    price_list: <PriceListPage {...sharedProps} />,
+    ccs: <CCSPage {...sharedProps} />,
+    hand_tool: <HandToolPage {...sharedProps} />,
+    vendor_payment_due: <VendorPaymentDuePage {...sharedProps} />,
+    pcc: <PCCPage {...sharedProps} />,
+    increased_cost: <IncreasedCostItemPage {...sharedProps} />,
+    raw_material_uses: <RawMaterialUsesReportPage {...sharedProps} />,
+    ready_product: <ReadyProductPage {...sharedProps} />,
+    material_history: <MaterialHistoryPage {...sharedProps} />,
+    purchase_register: <PurchaseRegisterPage {...sharedProps} />,
+    monthly_sale: <MonthlySaleReportPage {...sharedProps} />,
+    billing_report: <BillingReportPage {...sharedProps} />,
   };
 
   return (
