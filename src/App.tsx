@@ -1611,47 +1611,63 @@ export default function App() {
   }
 
   const NAV = [
+    // ── MAIN ──────────────────────────────────────────────
     { id: 'dashboard', icon: '📊', label: 'Dashboard', section: 'MAIN' },
-    { id: 'orders', icon: '📐', label: 'Orders & Drawings', badge: data.drawings.filter((d) => d.status === 'Pending').length, section: null },
-    { id: 'library', icon: '📋', label: 'Items Library', section: null },
-    { id: 'purchase', icon: '🛒', label: 'Purchase & POs', badge: data.purchaseOrders.filter((p) => p.status === 'Draft').length, section: 'PROCUREMENT' },
-    { id: 'inventory', icon: '📦', label: 'Inventory', section: null },
-    { id: 'production', icon: '🏭', label: 'Production Flow', badge: data.production.filter((p) => p.status === 'Hold').length, section: 'FACTORY' },
-    { id: 'labour', icon: '👷', label: 'Labour Entry', section: null },
-    { id: 'employee_worksheet', icon: '📝', label: 'Employee Worksheet', section: null },
-    { id: 'costing', icon: '💰', label: 'Costing Module', section: null },
-    { id: 'invoicing', icon: '🧾', label: 'Invoicing & Sales', section: null },
-    { id: 'billing', icon: '💳', label: 'Billing', section: 'QUALITY & DISPATCH' },
-    { id: 'finalize_production', icon: '🏁', label: 'Finalize Production', section: null },
-    { id: 'stock_out', icon: '📤', label: 'Stock Out', section: null },
-    { id: 'quality', icon: '🔬', label: 'Quality Report', section: null },
-    { id: 'wip_images', icon: '📷', label: 'WIP Images', section: null },
-    { id: 'packing_slip', icon: '📦', label: 'Packing Slip', section: null },
-    { id: 'in_transit', icon: '🚚', label: 'In-Transit', section: null },
-    { id: 'order_tracking', icon: '🗺', label: 'Order Tracking', section: 'REPORTS' },
-    { id: 'vendor_ledger', icon: '🏢', label: 'Vendor Ledger', section: null },
-    { id: 'production_report', icon: '📊', label: 'Production Report', section: null },
-    { id: 'raw_material_report', icon: '🪵', label: 'Raw Material Report', section: null },
-    { id: 'low_inventory', icon: '⚠️', label: 'Low Inventory', badge: (data.materials ?? []).filter((m) => m.current_stock <= m.min_stock_level).length || undefined, section: null },
-    { id: 'employee_record', icon: '👤', label: 'Employee Record', section: null },
-    { id: 'consolidated', icon: '📋', label: 'Consolidated Report', section: null },
-    { id: 'rrp_calculation', icon: '🔧', label: 'RRP Calculation', section: null },
-    { id: 'packing_list', icon: '📦', label: 'Packing List', section: null },
-    { id: 'production_showroom', icon: '🏪', label: 'Showroom Wise', section: null },
-    { id: 'price_list', icon: '💰', label: 'Price List', section: null },
-    { id: 'ccs', icon: '📋', label: 'CCS', section: null },
-    { id: 'pcc', icon: '📊', label: 'PCC', section: null },
-    { id: 'increased_cost', icon: '📈', label: 'Increased Cost Items', section: null },
-    { id: 'hand_tool', icon: '🔨', label: 'Hand Tools', section: null },
-    { id: 'vendor_payment_due', icon: '💸', label: 'Vendor Payment Due', section: null },
-    { id: 'raw_material_uses', icon: '🪵', label: 'Raw Material Uses', section: null },
-    { id: 'ready_product', icon: '✅', label: 'Ready Product', section: null },
-    { id: 'material_history', icon: '📜', label: 'Material History', section: null },
+
+    // ── ORDERS ────────────────────────────────────────────
+    { id: 'orders',        icon: '📐', label: 'Orders & Drawings', badge: data.drawings.filter((d) => d.status === 'Pending').length, section: 'ORDERS' },
+    { id: 'library',       icon: '📋', label: 'Items Library', section: null },
+    { id: 'order_tracking',icon: '🗺',  label: 'Order Tracking', section: null },
+    { id: 'price_list',    icon: '💰', label: 'Price List', section: null },
+
+    // ── PROCUREMENT ───────────────────────────────────────
+    { id: 'purchase',          icon: '🛒', label: 'Purchase & POs', badge: data.purchaseOrders.filter((p) => p.status === 'Draft').length, section: 'PROCUREMENT' },
     { id: 'purchase_register', icon: '🗂️', label: 'Purchase Register', section: null },
+    { id: 'vendor_ledger',     icon: '🏢', label: 'Vendor Ledger', section: null },
+    { id: 'vendor_payment_due',icon: '💸', label: 'Vendor Payment Due', section: null },
+
+    // ── INVENTORY & STOCK ─────────────────────────────────
+    { id: 'inventory',        icon: '📦', label: 'Inventory', section: 'INVENTORY & STOCK' },
+    { id: 'stock_out',        icon: '📤', label: 'Stock Out', section: null },
+    { id: 'low_inventory',    icon: '⚠️', label: 'Low Stock Alerts', badge: (data.materials ?? []).filter((m) => m.current_stock <= m.min_stock_level).length || undefined, section: null },
+    { id: 'material_history', icon: '📜', label: 'Material History', section: null },
+    { id: 'raw_material_uses',icon: '🪵', label: 'Raw Material Uses', section: null },
+
+    // ── PRODUCTION ────────────────────────────────────────
+    { id: 'production',          icon: '🏭', label: 'Production Flow', badge: data.production.filter((p) => p.status === 'Hold').length, section: 'PRODUCTION' },
+    { id: 'production_showroom', icon: '🏪', label: 'Showroom Wise', section: null },
+    { id: 'finalize_production', icon: '🏁', label: 'Finalize Production', section: null },
+    { id: 'ready_product',       icon: '✅', label: 'Ready Product', section: null },
+    { id: 'wip_images',          icon: '📷', label: 'WIP Images', section: null },
+    { id: 'labour',              icon: '👷', label: 'Labour Entry', section: null },
+    { id: 'employee_worksheet',  icon: '📝', label: 'Employee Worksheet', section: null },
+    { id: 'hand_tool',           icon: '🔨', label: 'Hand Tools', section: null },
+
+    // ── COSTING & PRICING ─────────────────────────────────
+    { id: 'costing',        icon: '💰', label: 'Costing Module', section: 'COSTING & PRICING' },
+    { id: 'rrp_calculation',icon: '🔧', label: 'RRP Calculation', section: null },
+    { id: 'pcc',            icon: '📊', label: 'PCC', section: null },
+    { id: 'ccs',            icon: '📋', label: 'CCS', section: null },
+    { id: 'increased_cost', icon: '📈', label: 'Increased Cost Items', section: null },
+
+    // ── QUALITY & DISPATCH ────────────────────────────────
+    { id: 'quality',      icon: '🔬', label: 'Quality Report', section: 'QUALITY & DISPATCH' },
+    { id: 'packing_slip', icon: '🗒️',  label: 'Packing Slip', section: null },
+    { id: 'packing_list', icon: '📦', label: 'Packing List', section: null },
+    { id: 'in_transit',   icon: '🚚', label: 'In-Transit', section: null },
+
+    // ── SALES & BILLING ───────────────────────────────────
+    { id: 'invoicing',    icon: '🧾', label: 'Invoicing & Sales', section: 'SALES & BILLING' },
+    { id: 'billing',      icon: '💳', label: 'Billing', section: null },
     { id: 'monthly_sale', icon: '📅', label: 'Monthly Sale Report', section: null },
-    { id: 'billing_report', icon: '🧾', label: 'Billing Report', section: null },
-    { id: 'reports', icon: '📈', label: 'Analytics', section: null },
-    { id: 'masters', icon: '⚙️', label: 'Masters', section: 'ADMIN' },
+    { id: 'billing_report',icon: '📉', label: 'Billing Report', section: null },
+
+    // ── REPORTS ───────────────────────────────────────────
+    { id: 'consolidated', icon: '📋', label: 'Consolidated Report', section: 'REPORTS' },
+    { id: 'reports',      icon: '📈', label: 'Analytics', section: null },
+
+    // ── ADMIN ─────────────────────────────────────────────
+    { id: 'masters',  icon: '⚙️', label: 'Masters', section: 'ADMIN' },
     { id: 'settings', icon: '🔐', label: 'Settings', section: null },
     ...(user.role === 'Admin' ? [{ id: 'audit_log', icon: '🔍', label: 'Audit Log', section: null }] : []),
   ];
