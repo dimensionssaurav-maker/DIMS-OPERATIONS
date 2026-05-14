@@ -47,12 +47,10 @@ export default function PriceListPage({ data, showToast }: Props) {
   const library    = data.library    ?? [];
   const invoices   = data.invoices   ?? [];
 
-  // filters — pre-populate with current month (matches original app)
-  const today = new Date();
-  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
-  const todayStr = today.toISOString().slice(0, 10);
-  const [dateFrom, setDateFrom] = useState(firstOfMonth);
-  const [dateTo,   setDateTo]   = useState(todayStr);
+  // filters — default empty so all seed records (Jan–Mar 2026) show on load
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo,   setDateTo]   = useState('');
   const [storeFilter, setStoreFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -274,7 +272,7 @@ th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppe
             className="text-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-2 rounded-xl font-bold shadow-sm hover:from-emerald-700 hover:to-teal-700 transition-all">
             Search
           </button>
-          <button onClick={() => { setDateFrom(firstOfMonth); setDateTo(todayStr); setStoreFilter('All'); setSearch(''); setPage(1); }}
+          <button onClick={() => { setDateFrom(''); setDateTo(''); setStoreFilter('All'); setSearch(''); setPage(1); }}
             className="text-sm border border-slate-200 bg-white text-slate-500 px-4 py-2 rounded-xl font-semibold hover:bg-slate-50 transition-all">
             Reset
           </button>
