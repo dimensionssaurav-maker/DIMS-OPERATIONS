@@ -34,10 +34,10 @@ export const StatusBadge = ({ status }: { status: string }) => (
 
 // ── StatCard ───────────────────────────────────────────────────────────────────
 export const StatCard = ({
-  title, value, icon, colorClass = 'from-indigo-500 to-violet-600', trend,
+  title, value, icon, colorClass = 'from-emerald-500 to-teal-600', trend,
 }: { title: string; value: string | number; icon: string; colorClass?: string; trend?: number }) => (
   <div className="relative bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group overflow-hidden cursor-default">
-    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/60 to-violet-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+    <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/60 to-teal-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
     <div className="relative flex justify-between items-start mb-4">
       <div className={`p-3 rounded-xl bg-gradient-to-br ${colorClass} shadow-lg`}>
         <span className="text-white text-xl">{icon}</span>
@@ -70,7 +70,7 @@ export const Modal = ({
     >
       <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="w-1 h-6 bg-gradient-to-b from-indigo-600 to-violet-600 rounded-full" />
+          <div className="w-1 h-6 bg-gradient-to-b from-emerald-600 to-teal-600 rounded-full" />
           <h2 className="text-base font-bold text-slate-900">{title}</h2>
         </div>
         <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-xl transition-colors">✕</button>
@@ -87,7 +87,7 @@ export const FormField = ({
   <div className="space-y-1.5">
     <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest">{label}</label>
     {children}
-    {hint && <p className="text-xs text-indigo-500 font-medium">{hint}</p>}
+    {hint && <p className="text-xs text-emerald-600 font-medium">{hint}</p>}
   </div>
 );
 
@@ -111,7 +111,7 @@ export const Input = ({
     className={`w-full px-3.5 py-2.5 border rounded-xl text-sm outline-none transition-all ${
       readOnly
         ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
-        : 'bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500'
+        : 'bg-white border-slate-200 focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500'
     } ${className}`}
   />
 );
@@ -128,7 +128,7 @@ export const Sel = ({
   <select
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 bg-white transition-all"
+    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 bg-white transition-all"
   >
     {placeholder && <option value="">{placeholder}</option>}
     {options.map((o) =>
@@ -141,10 +141,10 @@ export const Sel = ({
 
 // ── Button ─────────────────────────────────────────────────────────────────────
 const BTN_VARIANTS: Record<string, string> = {
-  primary:   'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-200/60 hover:shadow-lg hover:shadow-indigo-300/40',
+  primary:   'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-md shadow-emerald-200/60 hover:shadow-lg hover:shadow-emerald-300/40',
   secondary: 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm',
   danger:    'bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 hover:border-rose-300',
-  indigo:    'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200/50',
+  indigo:    'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200/50',
   ghost:     'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
   emerald:   'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-200/50 hover:shadow-lg hover:from-emerald-600 hover:to-teal-600',
 };
@@ -179,7 +179,7 @@ export const Table = ({
   <div className="overflow-x-auto">
     <table className="w-full text-left border-collapse">
       <thead>
-        <tr className="bg-gradient-to-r from-slate-50 to-indigo-50/50 border-b-2 border-indigo-100/60">
+        <tr className="bg-gradient-to-r from-slate-50 to-emerald-50/50 border-b-2 border-emerald-100/60">
           {cols.map((c) => (
             <th key={c} className="px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{c}</th>
           ))}
@@ -190,7 +190,7 @@ export const Table = ({
           <tr>
             <td colSpan={cols.length} className="px-5 py-14 text-center">
               <div className="flex flex-col items-center gap-2.5">
-                <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-indigo-100 rounded-2xl flex items-center justify-center text-2xl">📭</div>
+                <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-emerald-100 rounded-2xl flex items-center justify-center text-2xl">📭</div>
                 <p className="text-slate-400 text-sm font-semibold">{empty ?? 'No records found'}</p>
               </div>
             </td>
@@ -229,8 +229,8 @@ export const SidebarItem = ({
     onClick={onClick}
     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
       active
-        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-300/40'
-        : 'text-slate-500 hover:bg-indigo-50/80 hover:text-indigo-700'
+        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-300/40'
+        : 'text-slate-500 hover:bg-emerald-50/80 hover:text-emerald-700'
     }`}
   >
     <span className="text-base w-5 text-center flex-shrink-0">{icon}</span>

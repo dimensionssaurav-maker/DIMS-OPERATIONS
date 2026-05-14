@@ -67,15 +67,15 @@ function FilterBar({ search, onSearch, dateFrom, onDateFrom, dateTo, onDateTo, f
       <div className="flex flex-wrap gap-2 items-center">
         <div className="relative flex-1 min-w-[180px]">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
-          <input value={search} onChange={e=>onSearch(e.target.value)} placeholder="Search..." className="w-full pl-8 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-white"/>
+          <input value={search} onChange={e=>onSearch(e.target.value)} placeholder="Search..." className="w-full pl-8 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"/>
         </div>
         <div className="flex items-center gap-1">
           <span className="text-xs text-slate-500 font-semibold">From</span>
-          <input type="date" value={dateFrom} onChange={e=>onDateFrom(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-white"/>
+          <input type="date" value={dateFrom} onChange={e=>onDateFrom(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"/>
         </div>
         <div className="flex items-center gap-1">
           <span className="text-xs text-slate-500 font-semibold">To</span>
-          <input type="date" value={dateTo} onChange={e=>onDateTo(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-white"/>
+          <input type="date" value={dateTo} onChange={e=>onDateTo(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white"/>
         </div>
         <div className="relative">
           <button onClick={()=>setShowDP(!showDP)} className="flex items-center gap-1 text-sm border border-slate-200 rounded-xl px-3 py-2 hover:bg-slate-100 bg-slate-50 text-slate-600 font-medium">📅 Month</button>
@@ -98,20 +98,20 @@ function FilterBar({ search, onSearch, dateFrom, onDateFrom, dateTo, onDateTo, f
                     const s=[0,3,6,9],e=[2,5,8,11];
                     const sd=new Date(Number(qYear),s[i],1),ed=new Date(Number(qYear),e[i]+1,0);
                     onDateFrom(sd.toISOString().slice(0,10)); onDateTo(ed.toISOString().slice(0,10)); setShowDP(false);
-                  }} className="flex-1 text-xs py-1 rounded-lg bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100">{q}</button>
+                  }} className="flex-1 text-xs py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100">{q}</button>
                 ))}
               </div>
             </div>
           )}
         </div>
         {filters.map(f=>(
-          <select key={f.label} value={f.value} onChange={e=>f.onChange(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-white text-slate-700">
+          <select key={f.label} value={f.value} onChange={e=>f.onChange(e.target.value)} className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 bg-white text-slate-700">
             <option value="">{f.label}: All</option>
             {f.options.map(o=><option key={o} value={o}>{o}</option>)}
           </select>
         ))}
         {hasF && onClear && <button onClick={onClear} className="text-xs text-rose-500 hover:text-rose-700 font-bold px-2 py-1 rounded-lg hover:bg-rose-50">✕ Clear</button>}
-        {onExport && <button onClick={onExport} className="flex items-center gap-1.5 text-sm bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-4 py-2 rounded-xl font-bold hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-200/50 transition-all">⬇ Export CSV</button>}
+        {onExport && <button onClick={onExport} className="flex items-center gap-1.5 text-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2 rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 shadow-md shadow-emerald-200/50 transition-all">⬇ Export CSV</button>}
         {resultCount!==undefined && <span className="ml-auto text-xs text-slate-400 font-medium">{resultCount} result{resultCount!==1?'s':''}</span>}
       </div>
     </div>
@@ -135,14 +135,14 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-violet-900 to-purple-950 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-teal-900 to-green-950 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative blobs */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-violet-500/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
-      <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-emerald-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-green-600/10 rounded-full blur-3xl pointer-events-none" />
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="relative bg-white/95 backdrop-blur-xl w-full max-w-md p-8 rounded-3xl shadow-2xl border border-white/30">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-indigo-500/40 text-3xl">🪑</div>
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-emerald-500/40 text-3xl">🪑</div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">FurniTrack ERP</h1>
           <p className="text-slate-500 text-sm mt-1.5">Factory Operations Management System</p>
         </div>
@@ -154,7 +154,7 @@ function LoginPage() {
               <span className="font-bold">✗</span> {err}
             </div>
           )}
-          <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-3 rounded-xl font-bold hover:from-indigo-700 hover:to-violet-700 transition-all shadow-lg shadow-indigo-400/30 mt-2 disabled:opacity-60 text-sm tracking-wide">
+          <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg shadow-emerald-400/30 mt-2 disabled:opacity-60 text-sm tracking-wide">
             {loading ? 'Signing in…' : 'Sign In →'}
           </button>
         </form>
@@ -243,7 +243,7 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <StatCard title="Total Orders" value={data.orders.length} icon="📋" colorClass="bg-indigo-500" />
+        <StatCard title="Total Orders" value={data.orders.length} icon="📋" colorClass="from-emerald-500 to-teal-600" />
         <StatCard title="Drawing Phase" value={data.orders.filter((o) => o.status === 'Drawing Phase').length} icon="📐" colorClass="bg-amber-500" />
         <StatCard title="Production Ready" value={data.orders.filter((o) => o.status === 'Production Ready').length} icon="✅" colorClass="bg-emerald-500" />
       </div>
@@ -255,7 +255,7 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
             const drawing = data.drawings.find((d) => d.order_id === o.id);
             return (
               <tr key={o.id} className="hover:bg-slate-50 transition-colors">
-                <td className="px-5 py-4 font-bold text-indigo-600 text-sm font-mono">{o.showroom_order_no}</td>
+                <td className="px-5 py-4 font-bold text-emerald-700 text-sm font-mono">{o.showroom_order_no}</td>
                 <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{o.customer_name}</td>
                 <td className="px-5 py-4 text-sm text-slate-600">{o.delivery_deadline}</td>
                 <td className="px-5 py-4 text-sm font-bold text-slate-900">₹{o.amount.toLocaleString('en-IN')}</td>
@@ -266,12 +266,12 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
                       📐 v{drawing.version} — {drawing.status}
                     </button>
                   ) : (
-                    <button onClick={() => uploadDrawing(o.id)} className="text-xs text-indigo-600 font-bold hover:underline">⬆ Upload Drawing</button>
+                    <button onClick={() => uploadDrawing(o.id)} className="text-xs text-emerald-700 font-bold hover:underline">⬆ Upload Drawing</button>
                   )}
                 </td>
                 <td className="px-5 py-4">
                   {o.status === 'Production Ready' && (
-                    <Btn size="sm" variant="indigo" onClick={() => setShowProdModal(o)}>🏭 Start Production</Btn>
+                    <Btn size="sm" variant="emerald" onClick={() => setShowProdModal(o)}>🏭 Start Production</Btn>
                   )}
                 </td>
               </tr>
@@ -316,7 +316,7 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
               <FormField label="Quantity (Repeat Count)">
                 <Input value={prodForm.quantity} onChange={(v) => setProdForm((p) => ({ ...p, quantity: Number(v) }))} type="number" />
               </FormField>
-              <div className="flex gap-3 pt-2"><Btn type="submit" variant="indigo">🏭 Start Batch</Btn><Btn variant="secondary" onClick={() => setShowProdModal(null)}>Cancel</Btn></div>
+              <div className="flex gap-3 pt-2"><Btn type="submit" variant="emerald">🏭 Start Batch</Btn><Btn variant="secondary" onClick={() => setShowProdModal(null)}>Cancel</Btn></div>
             </form>
           </Modal>
         )}
@@ -345,7 +345,7 @@ function LibraryPage({ data, setData, showToast }: { data: AppData; setData: any
           <motion.div key={item.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all group">
             <div className="flex justify-between items-start mb-4">
               <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center text-2xl">{ICONS[item.category] ?? '📦'}</div>
-              <Badge label={item.category} color="indigo" />
+              <Badge label={item.category} color="teal" />
             </div>
             <h3 className="font-bold text-slate-900 text-lg mb-0.5">{item.name}</h3>
             <p className="text-sm text-slate-500 font-mono mb-3">{item.sku}</p>
@@ -462,7 +462,7 @@ function PurchasePage({ data, setData, showToast }: { data: AppData; setData: an
         </div>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total POs" value={data.purchaseOrders.length} icon="📄" colorClass="bg-indigo-500" />
+        <StatCard title="Total POs" value={data.purchaseOrders.length} icon="📄" colorClass="from-emerald-500 to-teal-600" />
         <StatCard title="Draft / Pending" value={data.purchaseOrders.filter((p) => p.status === 'Draft').length} icon="⏳" colorClass="bg-amber-500" />
         <StatCard title="PO Value" value={`₹${(data.purchaseOrders.reduce((a, p) => a + p.total_amount, 0) / 100000).toFixed(1)}L`} icon="💰" colorClass="bg-emerald-500" />
         <StatCard title="Low Stock" value={data.materials.filter((m) => m.current_stock <= m.min_stock_level).length} icon="⚠️" colorClass="bg-rose-500" />
@@ -481,7 +481,7 @@ function PurchasePage({ data, setData, showToast }: { data: AppData; setData: an
           <Table cols={['PO Number', 'Supplier', 'Item', 'Date', 'Amount', 'Status', 'Action']}
             rows={filteredPOs.map((po) => (
               <tr key={po.id} className="hover:bg-slate-50 transition-colors">
-                <td className="px-5 py-4 font-bold text-indigo-600 text-sm font-mono">{po.po_number}</td>
+                <td className="px-5 py-4 font-bold text-emerald-700 text-sm font-mono">{po.po_number}</td>
                 <td className="px-5 py-4 text-sm font-semibold text-slate-900">{po.supplier_name}</td>
                 <td className="px-5 py-4 text-sm text-slate-600">{po.items[0]?.name}</td>
                 <td className="px-5 py-4 text-sm text-slate-500">{po.order_date}</td>
@@ -514,7 +514,7 @@ function PurchasePage({ data, setData, showToast }: { data: AppData; setData: an
             rows={data.materialIssues.map((i) => (
               <tr key={i.id} className="hover:bg-slate-50 transition-colors">
                 <td className="px-5 py-4 text-sm text-slate-500">{new Date(i.timestamp).toLocaleDateString()}</td>
-                <td className="px-5 py-4 font-bold text-indigo-600 text-sm font-mono">{i.production_id}</td>
+                <td className="px-5 py-4 font-bold text-emerald-700 text-sm font-mono">{i.production_id}</td>
                 <td className="px-5 py-4 text-sm text-slate-700">{i.material_name}</td>
                 <td className="px-5 py-4 text-sm font-bold text-slate-900">{i.quantity} {i.unit}</td>
                 <td className="px-5 py-4"><Badge label={i.department} color="slate" /></td>
@@ -625,7 +625,7 @@ function InventoryPage({ data, setData, showToast }: { data: AppData; setData: a
               <div key={m.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
                 <div className="flex justify-between items-start mb-3">
                   <div><h3 className="font-bold text-slate-900">{m.name}</h3><p className="text-xs text-slate-500 font-bold uppercase">{m.category}</p></div>
-                  <button onClick={() => { setShowAdjust(m); setAdj({ amount: 0, reason: '' }); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all text-sm">⟳</button>
+                  <button onClick={() => { setShowAdjust(m); setAdj({ amount: 0, reason: '' }); }} className="p-2 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all text-sm">⟳</button>
                 </div>
                 <div className="flex justify-between items-end mb-3">
                   <div><p className="text-[10px] text-slate-400 font-bold uppercase">Current Stock</p><p className={`text-2xl font-bold ${isLow ? 'text-rose-600' : 'text-slate-900'}`}>{m.current_stock} {m.unit}</p></div>
@@ -660,7 +660,7 @@ function InventoryPage({ data, setData, showToast }: { data: AppData; setData: a
             <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
               <div className="flex justify-between items-start mb-3">
                 <div><h3 className="font-bold text-slate-900">{item.name}</h3><p className="text-xs font-mono text-slate-500">{item.sku}</p></div>
-                <Badge label={item.category} color="indigo" />
+                <Badge label={item.category} color="teal" />
               </div>
               <p className="text-2xl font-bold text-slate-900">{item.invoiced_qty} <span className="text-sm text-slate-400 font-normal">units sold</span></p>
               <p className="text-sm text-slate-500 mt-1">In production: {item.in_production_qty}</p>
@@ -675,7 +675,7 @@ function InventoryPage({ data, setData, showToast }: { data: AppData; setData: a
               <div className="p-4 bg-slate-50 rounded-xl text-sm"><span className="font-bold">Current:</span> {showAdjust.current_stock} {showAdjust.unit}</div>
               <FormField label="Adjustment Amount (+ to add, − to remove)" hint="e.g. 50 to add stock, -10 to remove"><Input value={adj.amount} onChange={(v) => setAdj((p) => ({ ...p, amount: Number(v) }))} type="number" placeholder="0" /></FormField>
               <FormField label="Reason"><textarea value={adj.reason} onChange={(e) => setAdj((p) => ({ ...p, reason: e.target.value }))} className="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500 h-20 resize-none" placeholder="Damage, count correction..." /></FormField>
-              <div className="flex gap-3 pt-2"><Btn type="submit" variant="indigo">Update Stock</Btn><Btn variant="secondary" onClick={() => setShowAdjust(null)}>Cancel</Btn></div>
+              <div className="flex gap-3 pt-2"><Btn type="submit" variant="emerald">Update Stock</Btn><Btn variant="secondary" onClick={() => setShowAdjust(null)}>Cancel</Btn></div>
             </form>
           </Modal>
         )}
@@ -733,7 +733,7 @@ function ProductionPage({ data, setData, showToast }: { data: AppData; setData: 
         <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">● Live Tracking</span>
       </div>
       <div className="grid grid-cols-4 gap-4">
-        <StatCard title="Total Items" value={data.production.length} icon="📦" colorClass="bg-indigo-500" />
+        <StatCard title="Total Items" value={data.production.length} icon="📦" colorClass="from-emerald-500 to-teal-600" />
         <StatCard title="Active" value={data.production.filter((p) => p.status === 'Active').length} icon="▶" colorClass="bg-emerald-500" />
         <StatCard title="On Hold" value={data.production.filter((p) => p.status === 'Hold').length} icon="⏸" colorClass="bg-rose-500" />
         <StatCard title="Ready to Dispatch" value={data.production.filter((p) => p.current_stage === STAGES[STAGES.length - 1]).length} icon="🚚" colorClass="bg-teal-500" />
@@ -759,7 +759,7 @@ function ProductionPage({ data, setData, showToast }: { data: AppData; setData: 
             <motion.div key={item.id} layout className={`bg-white p-6 rounded-2xl border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 ${item.status === 'Hold' ? 'border-rose-200 bg-rose-50/30' : 'border-slate-200'}`}>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3 flex-wrap">
-                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg uppercase font-mono">{item.production_id}</span>
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg uppercase font-mono">{item.production_id}</span>
                   <h3 className="font-bold text-slate-900 text-base">{item.product_name}</h3>
                   {item.quantity > 1 && <span className="text-xs text-slate-400">(×{item.quantity})</span>}
                   {item.status === 'Hold' && <Badge label="On Hold" color="rose" />}
@@ -884,7 +884,7 @@ function LabourEntryPage({ data, setData, showToast }: { data: AppData; setData:
         <Btn onClick={() => setShowModal(true)}>＋ Add Labour Entry</Btn>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Entries" value={filtered.length} icon="📝" colorClass="bg-indigo-500" />
+        <StatCard title="Total Entries" value={filtered.length} icon="📝" colorClass="from-emerald-500 to-teal-600" />
         <StatCard title="Labour Cost" value={'₹' + (totalCost / 1000).toFixed(1) + 'K'} icon="💰" colorClass="bg-purple-500" />
         <StatCard title="Total Man-Hours" value={totalHours + 'h'} icon="⏱️" colorClass="bg-amber-500" />
         <StatCard title="Items Covered" value={Object.keys(grouped).length} icon="🏷️" colorClass="bg-emerald-500" />
@@ -909,7 +909,7 @@ function LabourEntryPage({ data, setData, showToast }: { data: AppData; setData:
             <div key={prodId} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="font-bold text-indigo-600 font-mono text-sm bg-indigo-50 px-2.5 py-1 rounded-lg">{prodId}</span>
+                  <span className="font-bold text-emerald-700 font-mono text-sm bg-emerald-50 px-2.5 py-1 rounded-lg">{prodId}</span>
                   <span className="font-semibold text-slate-800 text-sm">{entries[0]?.product_name}</span>
                 </div>
                 <div className="flex gap-4 text-sm">
@@ -937,7 +937,7 @@ function LabourEntryPage({ data, setData, showToast }: { data: AppData; setData:
                     <tr key={l.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                       <td className="px-4 py-3 text-slate-500 text-xs">{l.work_date}</td>
                       <td className="px-4 py-3">
-                        <span className={l.shift === 'Morning' ? 'bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-bold' : l.shift === 'Evening' ? 'bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg text-xs font-bold' : 'bg-slate-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold'}>
+                        <span className={l.shift === 'Morning' ? 'bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-bold' : l.shift === 'Evening' ? 'bg-teal-50 text-teal-700 px-2 py-0.5 rounded-lg text-xs font-bold' : 'bg-slate-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold'}>
                           {l.shift === 'Morning' ? '🌅' : l.shift === 'Evening' ? '🌆' : '🌙'} {l.shift}
                         </span>
                       </td>
@@ -1080,7 +1080,7 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
         <Btn onClick={() => { setEditId(null); setForm({ production_item_id: '', estimated_cost: 0, material_cost: 0, labour_cost: 0, overheads: 0 }); setShowModal(true); }}>+ Add Cost Entry</Btn>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Material" value={'₹' + (totalMat/1000).toFixed(0) + 'K'} icon="🪙" colorClass="bg-indigo-500" />
+        <StatCard title="Total Material" value={'₹' + (totalMat/1000).toFixed(0) + 'K'} icon="🪙" colorClass="from-emerald-500 to-teal-600" />
         <StatCard title="Total Labour" value={'₹' + (totalLab/1000).toFixed(0) + 'K'} icon="👷" colorClass="bg-purple-500" />
         <StatCard title="Total Overhead" value={'₹' + (totalOh/1000).toFixed(0) + 'K'} icon="⚡" colorClass="bg-amber-500" />
         <StatCard title="Total Cost" value={'₹' + ((totalMat+totalLab+totalOh)/1000).toFixed(0) + 'K'} icon="💰" colorClass="bg-emerald-500" />
@@ -1103,9 +1103,9 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
           return (
             <div key={c.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="grid grid-cols-9 gap-1 px-5 py-4 cursor-pointer hover:bg-slate-50 items-center" onClick={() => setExpandedId(isExp ? null : c.id)}>
-                <div className="col-span-2"><p className="font-bold text-indigo-600 text-sm font-mono">{c.production_id}</p><p className="font-semibold text-slate-900 text-sm">{c.product_name}</p></div>
+                <div className="col-span-2"><p className="font-bold text-emerald-700 text-sm font-mono">{c.production_id}</p><p className="font-semibold text-slate-900 text-sm">{c.product_name}</p></div>
                 <div className="text-right text-sm"><p className="text-[10px] text-slate-400 font-bold uppercase">Est.</p><p className="text-slate-500">{'₹'}{c.estimated_cost.toLocaleString('en-IN')}</p></div>
-                <div className="text-right text-sm text-indigo-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Material</p><p>{'₹'}{c.material_cost.toLocaleString('en-IN')}</p></div>
+                <div className="text-right text-sm text-emerald-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Material</p><p>{'₹'}{c.material_cost.toLocaleString('en-IN')}</p></div>
                 <div className="text-right text-sm text-purple-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Labour</p><p>{'₹'}{c.labour_cost.toLocaleString('en-IN')}</p></div>
                 <div className="text-right text-sm text-amber-700"><p className="text-[10px] text-slate-400 font-bold uppercase">Overhead</p><p>{'₹'}{c.overheads.toLocaleString('en-IN')}</p></div>
                 <div className="text-right text-sm font-bold"><p className="text-[10px] text-slate-400 font-bold uppercase">Total</p><p className={over ? 'text-rose-700' : 'text-emerald-700'}>{'₹'}{c.total_cost.toLocaleString('en-IN')}</p></div>
@@ -1120,7 +1120,7 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">{'🪙'} Materials Issued (Store Slips)</h4>
-                      {mTot > 0 && <span className="text-xs text-indigo-600 font-bold">Calc: {'₹'}{mTot.toLocaleString('en-IN')}</span>}
+                      {mTot > 0 && <span className="text-xs text-emerald-700 font-bold">Calc: {'₹'}{mTot.toLocaleString('en-IN')}</span>}
                     </div>
                     {mats.length > 0 ? (
                       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -1139,13 +1139,13 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                               <td className="px-4 py-2 text-slate-500">{m.department}</td>
                               <td className="px-4 py-2 text-right">{m.quantity} {m.unit}</td>
                               <td className="px-4 py-2 text-right text-slate-500">{'₹'}{m.rate_per_unit || 0}/unit</td>
-                              <td className="px-4 py-2 text-right font-semibold text-indigo-700">{'₹'}{((m.quantity||0)*(m.rate_per_unit||0)).toLocaleString('en-IN')}</td>
+                              <td className="px-4 py-2 text-right font-semibold text-emerald-700">{'₹'}{((m.quantity||0)*(m.rate_per_unit||0)).toLocaleString('en-IN')}</td>
                               <td className="px-4 py-2 text-slate-400 text-xs">{m.timestamp?.slice(0,10)}</td>
                             </tr>
                           ))}</tbody>
-                          <tfoot className="bg-indigo-50 border-t border-indigo-100"><tr>
-                            <td colSpan={4} className="px-4 py-2 font-bold text-indigo-700 text-xs uppercase">Material Total</td>
-                            <td className="px-4 py-2 text-right font-bold text-indigo-700">{'₹'}{mTot.toLocaleString('en-IN')}</td>
+                          <tfoot className="bg-emerald-50 border-t border-emerald-100"><tr>
+                            <td colSpan={4} className="px-4 py-2 font-bold text-emerald-700 text-xs uppercase">Material Total</td>
+                            <td className="px-4 py-2 text-right font-bold text-emerald-700">{'₹'}{mTot.toLocaleString('en-IN')}</td>
                             <td></td>
                           </tr></tfoot>
                         </table>
@@ -1172,7 +1172,7 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                           <tbody>{labs.map((l: any) => (
                             <tr key={l.id} className="border-b border-slate-100 last:border-0">
                               <td className="px-4 py-2 text-slate-500 text-xs">{l.work_date}</td>
-                              <td className="px-4 py-2"><span className={l.shift==='Morning'?'bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-bold':l.shift==='Evening'?'bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg text-xs font-bold':'bg-slate-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold'}>{l.shift==='Morning'?'🌅':l.shift==='Evening'?'🌆':'🌙'} {l.shift}</span></td>
+                              <td className="px-4 py-2"><span className={l.shift==='Morning'?'bg-amber-50 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-bold':l.shift==='Evening'?'bg-teal-50 text-teal-700 px-2 py-0.5 rounded-lg text-xs font-bold':'bg-slate-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold'}>{l.shift==='Morning'?'🌅':l.shift==='Evening'?'🌆':'🌙'} {l.shift}</span></td>
                               <td className="px-4 py-2 text-slate-500">{l.department}</td>
                               <td className="px-4 py-2 font-medium text-slate-800">{l.worker_name}</td>
                               <td className="px-4 py-2 text-right">{l.worker_count}</td>
@@ -1189,7 +1189,7 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                     ) : <p className="text-xs text-slate-400 italic p-3 bg-white rounded-xl border border-dashed border-slate-200">No labour entries. Add from Labour Entry page.</p>}
                   </div>
                   <div className="grid grid-cols-4 gap-4 bg-white rounded-xl border border-slate-200 p-4 text-center">
-                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Material</p><p className="text-lg font-bold text-indigo-700">{'₹'}{c.material_cost.toLocaleString('en-IN')}</p></div>
+                    <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Material</p><p className="text-lg font-bold text-emerald-700">{'₹'}{c.material_cost.toLocaleString('en-IN')}</p></div>
                     <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Labour</p><p className="text-lg font-bold text-purple-700">{'₹'}{c.labour_cost.toLocaleString('en-IN')}</p></div>
                     <div><p className="text-xs text-slate-400 font-bold uppercase mb-1">Overhead</p><p className="text-lg font-bold text-amber-700">{'₹'}{c.overheads.toLocaleString('en-IN')}</p></div>
                     <div className={over?'bg-rose-50 rounded-xl p-2':'bg-emerald-50 rounded-xl p-2'}>
@@ -1282,7 +1282,7 @@ function InvoicingPage({ data, setData, showToast }: { data: AppData; setData: a
         <Btn onClick={() => setShowModal(true)}>🧾 Generate Invoice</Btn>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Invoices" value={filteredInvs.length} icon="🧾" colorClass="bg-indigo-500" />
+        <StatCard title="Total Invoices" value={filteredInvs.length} icon="🧾" colorClass="from-emerald-500 to-teal-600" />
         <StatCard title="Paid" value={filteredInvs.filter((i) => i.status === 'Paid').length} icon="✅" colorClass="bg-emerald-500" />
         <StatCard title="Unpaid" value={filteredInvs.filter((i) => i.status === 'Unpaid').length} icon="⏳" colorClass="bg-rose-500" />
         <StatCard title="Revenue (Paid)" value={`₹${(totalRev / 100000).toFixed(2)}L`} icon="💰" colorClass="bg-amber-500" />
@@ -1297,7 +1297,7 @@ function InvoicingPage({ data, setData, showToast }: { data: AppData; setData: a
         <Table cols={['Invoice No', 'Customer', 'Date', 'CGST (9%)', 'SGST (9%)', 'Total', 'Status', 'Action']}
           rows={filteredInvs.map((inv) => (
             <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
-              <td className="px-5 py-4 font-bold text-indigo-600 text-sm">{inv.invoice_no}</td>
+              <td className="px-5 py-4 font-bold text-emerald-700 text-sm">{inv.invoice_no}</td>
               <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{inv.customer_name}</td>
               <td className="px-5 py-4 text-sm text-slate-500">{new Date(inv.dispatch_date).toLocaleDateString()}</td>
               <td className="px-5 py-4 text-sm text-amber-600 font-bold">₹{Math.round(inv.gst_amount / 2).toLocaleString('en-IN')}</td>
@@ -1389,12 +1389,12 @@ function ReportsPage({ data }: { data: AppData }) {
         resultCount={tab==='production'?rptProd.length:tab==='cost'?rptCosts.length:tab==='stock'?rptMats.length:rptInvs.length}
       />
       <div className="flex gap-2 flex-wrap">
-        {TABS.map((t) => <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${tab === t.id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>{t.l}</button>)}
+        {TABS.map((t) => <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${tab === t.id ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>{t.l}</button>)}
       </div>
       {tab === 'production' && (
         <div className="space-y-5">
           <div className="grid grid-cols-3 gap-4">
-            <StatCard title="Filtered" value={rptProd.length} icon="🏭" colorClass="bg-indigo-500" />
+            <StatCard title="Filtered" value={rptProd.length} icon="🏭" colorClass="from-emerald-500 to-teal-600" />
             <StatCard title="Active" value={rptProd.filter((p) => p.status === 'Active').length} icon="▶" colorClass="bg-emerald-500" />
             <StatCard title="On Hold" value={rptProd.filter((p) => p.status === 'Hold').length} icon="⏸" colorClass="bg-rose-500" />
           </div>
@@ -1402,10 +1402,10 @@ function ReportsPage({ data }: { data: AppData }) {
             <Table cols={['Prod. ID', 'Product', 'Customer', 'Stage', 'Qty', 'Status']}
               rows={rptProd.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-50">
-                  <td className="px-5 py-4 font-bold text-indigo-600 text-sm font-mono">{p.production_id}</td>
+                  <td className="px-5 py-4 font-bold text-emerald-700 text-sm font-mono">{p.production_id}</td>
                   <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{p.product_name}</td>
                   <td className="px-5 py-4 text-sm text-slate-600">{p.customer_name}</td>
-                  <td className="px-5 py-4"><Badge label={p.current_stage.split(':')[1]?.trim() ?? p.current_stage} color="indigo" /></td>
+                  <td className="px-5 py-4"><Badge label={p.current_stage.split(':')[1]?.trim() ?? p.current_stage} color="teal" /></td>
                   <td className="px-5 py-4 text-sm font-bold">{p.quantity}</td>
                   <td className="px-5 py-4"><StatusBadge status={p.status} /></td>
                 </tr>
@@ -1417,7 +1417,7 @@ function ReportsPage({ data }: { data: AppData }) {
       {tab === 'cost' && (
         <div className="space-y-5">
           <div className="grid grid-cols-4 gap-4">
-            <StatCard title="Material" value={`₹${(data.costing.reduce((a, c) => a + c.material_cost, 0) / 1000).toFixed(0)}K`} icon="🪵" colorClass="bg-indigo-500" />
+            <StatCard title="Material" value={`₹${(data.costing.reduce((a, c) => a + c.material_cost, 0) / 1000).toFixed(0)}K`} icon="🪵" colorClass="from-emerald-500 to-teal-600" />
             <StatCard title="Labour" value={`₹${(data.costing.reduce((a, c) => a + c.labour_cost, 0) / 1000).toFixed(0)}K`} icon="👷" colorClass="bg-purple-500" />
             <StatCard title="Overhead" value={`₹${(data.costing.reduce((a, c) => a + c.overheads, 0) / 1000).toFixed(0)}K`} icon="⚡" colorClass="bg-amber-500" />
             <StatCard title="Total Cost" value={`₹${(totalCost / 1000).toFixed(0)}K`} icon="💰" colorClass="bg-emerald-500" />
@@ -1426,7 +1426,7 @@ function ReportsPage({ data }: { data: AppData }) {
             <Table cols={['Prod. ID', 'Product', 'Estimated', 'Material', 'Labour', 'Overhead', 'Total', 'Budget']}
               rows={rptCosts.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50">
-                  <td className="px-5 py-4 font-bold text-indigo-600 text-sm font-mono">{c.production_id}</td>
+                  <td className="px-5 py-4 font-bold text-emerald-700 text-sm font-mono">{c.production_id}</td>
                   <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{c.product_name}</td>
                   <td className="px-5 py-4 text-sm">₹{c.estimated_cost.toLocaleString('en-IN')}</td>
                   <td className="px-5 py-4 text-sm">₹{c.material_cost.toLocaleString('en-IN')}</td>
@@ -1448,7 +1448,7 @@ function ReportsPage({ data }: { data: AppData }) {
               return (
                 <tr key={m.id} className="hover:bg-slate-50">
                   <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{m.name}</td>
-                  <td className="px-5 py-4"><Badge label={m.category} color="indigo" /></td>
+                  <td className="px-5 py-4"><Badge label={m.category} color="teal" /></td>
                   <td className="px-5 py-4 text-sm font-bold">{m.current_stock} {m.unit}</td>
                   <td className="px-5 py-4 text-sm text-slate-500">{m.min_stock_level} {m.unit}</td>
                   <td className="px-5 py-4 text-sm font-bold" style={{ color: shortfall > 0 ? '#dc2626' : '#059669' }}>{shortfall > 0 ? `−${shortfall} ${m.unit}` : '—'}</td>
@@ -1470,7 +1470,7 @@ function ReportsPage({ data }: { data: AppData }) {
             <Table cols={['Invoice', 'Customer', 'Base Amount', 'GST', 'Total', 'Status']}
               rows={rptInvs.map((inv) => (
                 <tr key={inv.id} className="hover:bg-slate-50">
-                  <td className="px-5 py-4 font-bold text-indigo-600 text-sm">{inv.invoice_no}</td>
+                  <td className="px-5 py-4 font-bold text-emerald-700 text-sm">{inv.invoice_no}</td>
                   <td className="px-5 py-4 font-semibold text-slate-900 text-sm">{inv.customer_name}</td>
                   <td className="px-5 py-4 text-sm">₹{Math.round(inv.total_amount / 1.18).toLocaleString('en-IN')}</td>
                   <td className="px-5 py-4 text-sm text-amber-600 font-bold">₹{Math.round(inv.gst_amount).toLocaleString('en-IN')}</td>
@@ -1508,7 +1508,7 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
         <Btn onClick={() => { setEditId(null); setForm({}); setShowModal(true); }}>＋ Add {MASTERS.find((m) => m.id === master)?.label.slice(0, -1)}</Btn>
       </div>
       <div className="flex gap-2 flex-wrap">
-        {MASTERS.map((m) => <button key={m.id} onClick={() => setMaster(m.id)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all flex items-center gap-2 ${master === m.id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>{m.icon} {m.label}</button>)}
+        {MASTERS.map((m) => <button key={m.id} onClick={() => setMaster(m.id)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all flex items-center gap-2 ${master === m.id ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>{m.icon} {m.label}</button>)}
       </div>
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <Table cols={['Name / Details', 'Extra Info', 'Actions']}
@@ -1606,15 +1606,15 @@ export default function App() {
 
   if (mode === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-violet-900 to-purple-950 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-teal-900 to-green-950 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
         <div className="relative text-center space-y-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-2xl shadow-indigo-500/40 animate-pulse">🪑</div>
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-2xl shadow-emerald-500/40 animate-pulse">🪑</div>
           <p className="text-white font-bold text-lg tracking-tight">FurniTrack ERP</p>
-          <p className="text-indigo-300 text-sm">{loadingMsg}</p>
+          <p className="text-emerald-300 text-sm">{loadingMsg}</p>
           <div className="flex gap-1.5 justify-center">
-            {[0,1,2].map(i => <div key={i} className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
+            {[0,1,2].map(i => <div key={i} className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
           </div>
         </div>
       </div>
@@ -1733,16 +1733,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-white flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-white flex">
 
       {/* ── SIDEBAR ─────────────────────────────────────────────────────────── */}
       <aside className="w-64 flex flex-col sticky top-0 h-screen z-50 bg-white border-r border-slate-200/70 shadow-sm">
         {/* Brand — gradient header */}
-        <div className="bg-gradient-to-br from-indigo-700 to-violet-700 px-5 py-4 flex items-center gap-3 shrink-0">
+        <div className="bg-gradient-to-br from-emerald-700 to-teal-700 px-5 py-4 flex items-center gap-3 shrink-0">
           <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center text-xl shrink-0">🪑</div>
           <div>
             <p className="font-black text-white text-sm tracking-tight leading-tight">FurniTrack ERP</p>
-            <p className="text-[10px] text-indigo-200 mt-0.5">v2.4 · Factory Operations</p>
+            <p className="text-[10px] text-emerald-100 mt-0.5">v2.4 · Factory Operations</p>
           </div>
         </div>
         {/* Nav */}
@@ -1751,8 +1751,8 @@ export default function App() {
             <div key={item.id}>
               {item.section && (
                 <div className="flex items-center gap-2 px-3 pt-5 pb-1.5">
-                  <p className="text-[9px] text-indigo-400 font-black uppercase tracking-widest whitespace-nowrap">{item.section}</p>
-                  <div className="flex-1 h-px bg-indigo-100/60" />
+                  <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest whitespace-nowrap">{item.section}</p>
+                  <div className="flex-1 h-px bg-emerald-100/60" />
                 </div>
               )}
               <SidebarItem icon={item.icon} label={item.label} active={page === item.id} onClick={() => setPage(item.id)} badge={item.badge} />
@@ -1762,7 +1762,7 @@ export default function App() {
         {/* User footer */}
         <div className="p-3 border-t border-slate-100 shrink-0 bg-slate-50/60">
           <div className="flex items-center gap-3 px-2 py-2 mb-1">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm">
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm">
               {user.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
