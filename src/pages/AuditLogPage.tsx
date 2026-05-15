@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import { db } from '../lib/supabase';
 
 const AUDITABLE_TABLES = [
@@ -180,8 +180,8 @@ export default function AuditLogPage({ mode }: { mode: string }) {
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <>
-                    <tr key={row.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => setExpanded(expanded === row.id ? null : row.id)}>
+                  <Fragment key={row.id}>
+                    <tr className="hover:bg-slate-50 cursor-pointer" onClick={() => setExpanded(expanded === row.id ? null : row.id)}>
                       <td className="px-5 py-3 text-slate-500 font-mono text-xs whitespace-nowrap">
                         {new Date(row.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'medium' })}
                       </td>
@@ -195,14 +195,17 @@ export default function AuditLogPage({ mode }: { mode: string }) {
                       <td className="px-5 py-3 text-slate-700 font-medium">{row.username || '—'}</td>
                       <td className="px-5 py-3 text-slate-400 text-xs">
                         {row.new_data ? (
-                          <button className="text-indigo-500 hover:text-indigo-700 font-semibold">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setExpanded(expanded === row.id ? null : row.id); }}
+                            className="text-indigo-500 hover:text-indigo-700 font-semibold"
+                          >
                             {expanded === row.id ? '▲ hide' : '▼ show'}
                           </button>
                         ) : '—'}
                       </td>
                     </tr>
                     {expanded === row.id && row.new_data && (
-                      <tr key={`${row.id}-exp`} className="bg-slate-50">
+                      <tr className="bg-slate-50">
                         <td colSpan={6} className="px-5 py-3">
                           <pre className="text-xs text-slate-600 bg-white border border-slate-200 rounded-xl p-4 overflow-x-auto whitespace-pre-wrap">
                             {JSON.stringify(row.new_data, null, 2)}
@@ -210,7 +213,7 @@ export default function AuditLogPage({ mode }: { mode: string }) {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))
               )}
             </tbody>

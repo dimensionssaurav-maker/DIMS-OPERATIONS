@@ -29,10 +29,12 @@ type RRPItem = {
   rrp_status: 'Done' | 'Pending';
 };
 
-export default function RRPCalculationPage({ data, showToast }: Props) {
+export default function RRPCalculationPage({ data, showToast, setData }: Props) {
   const [activeTab, setActiveTab] = useState<'All' | 'Pending' | 'Done'>('All');
   const [search, setSearch] = useState('');
   const [customerFilter, setCustomerFilter] = useState('All');
+  // Local set of production item IDs manually marked Done this session
+  const [localDoneIds, setLocalDoneIds] = useState<Set<number>>(new Set());
 
   const customers = useMemo(() => {
     const unique = Array.from(new Set(data.production.map((p) => p.customer_name)));
@@ -45,7 +47,8 @@ export default function RRPCalculationPage({ data, showToast }: Props) {
       const estimated_total = Number(p.mat_cost ?? 0) + Number(p.lab_cost ?? 0) + Number(p.oh_cost ?? 0);
       const actual_total = costingEntry ? Number(costingEntry.total_cost) : null;
       const variance = actual_total !== null ? actual_total - estimated_total : null;
-      const rrp_status: 'Done' | 'Pending' = costingEntry ? 'Done' : 'Pending';
+      const markedDone = localDoneIds.has(p.id);
+      const rrp_status: 'Done' | 'Pending' = (costingEntry || markedDone) ? 'Done' : 'Pending';
       return {
         id: p.id,
         production_id: p.production_id,
@@ -60,7 +63,7 @@ export default function RRPCalculationPage({ data, showToast }: Props) {
         rrp_status,
       };
     });
-  }, [data.production, data.costing]);
+  }, [data.production, data.costing, localDoneIds]);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
@@ -232,7 +235,31 @@ export default function RRPCalculationPage({ data, showToast }: Props) {
                     <td className="px-4 py-3">
                       {item.rrp_status === 'Pending' && (
                         <button
-                          onClick={() => showToast(`Marked ${item.production_id} as Done`, 'success')}
+                          onClick={() => {
+                            // Mark as done in local state so the row moves to Done tab
+                            setLocalDoneIds((prev) => new Set([...prev, item.id]));
+                            // Also push a synthetic costing entry so it persists in data
+                            setData((prev: any) => {
+                              const estimated = item.estimated_total;
+                              const newEntry = {
+                                id: Date.now(),
+                                production_item_id: item.id,
+                                production_id: item.production_id,
+                                product_name: item.product_name,
+                                estimated_cost: estimated,
+                                material_cost: item.mat_cost,
+                                labour_cost: item.lab_cost,
+                                overheads: item.oh_cost,
+                                total_cost: estimated,
+                                created_at: new Date().toISOString().slice(0, 10),
+                              };
+                              return {
+                                ...prev,
+                                costing: [...(prev.costing ?? []), newEntry],
+                              };
+                            });
+                            showToast(`${item.production_id} marked as Done`, 'success');
+                          }}
                           className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-emerald-700 transition-colors whitespace-nowrap"
                         >
                           Mark Done
