@@ -7,7 +7,7 @@ function fmt(n: number) {
   return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
 }
 
-export default function CCSPage({ data, showToast }: Props) {
+export default function CCSPage({ data, showToast, setData }: Props) {
   const [activeTab, setActiveTab] = useState<'ccs' | 'approved'>('ccs');
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -209,7 +209,15 @@ export default function CCSPage({ data, showToast }: Props) {
                     <td className="px-4 py-3">
                       {activeTab === 'ccs' && (
                         <button
-                          onClick={() => showToast('CCS Approved', 'success')}
+                          onClick={() => {
+                            setData((prev: any) => ({
+                              ...prev,
+                              purchaseOrders: prev.purchaseOrders.map((po: any) =>
+                                po.id === c.id ? { ...po, status: 'Received' } : po
+                              ),
+                            }));
+                            showToast('CCS Approved', 'success');
+                          }}
                           className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700 transition-colors"
                         >
                           Approve

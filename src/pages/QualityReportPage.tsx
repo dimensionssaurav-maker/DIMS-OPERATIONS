@@ -58,12 +58,12 @@ export default function QualityReportPage({ data, actions, showToast }: Props) {
     try {
       if (editId) {
         await actions.updateQualityReport(editId, form);
-        showToast('QC record updated');
+        showToast('QC record updated', 'success');
       } else {
         const prod = data.production.find((p) => p.production_id === form.production_id);
         const payload = { ...form, production_item_id: prod?.id ?? 0, customer_name: prod?.customer_name ?? form.customer_name, product_name: prod?.product_name ?? form.product_name };
         await actions.addQualityReport(payload);
-        showToast('QC record added');
+        showToast('QC record added', 'success');
       }
       setShowModal(false);
     } catch { showToast('Failed to save', 'error'); }
@@ -73,7 +73,7 @@ export default function QualityReportPage({ data, actions, showToast }: Props) {
   const del = async (id: number) => {
     if (!confirm('Delete this QC record?')) return;
     await actions.deleteQualityReport(id);
-    showToast('Deleted');
+    showToast('Deleted', 'success');
   };
 
   const stats = {

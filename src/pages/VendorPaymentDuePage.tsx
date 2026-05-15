@@ -23,7 +23,7 @@ const TODAY = '2026-05-14';
 
 type DueFilter = 'All' | 'Overdue' | 'Due This Week' | 'Upcoming';
 
-export default function VendorPaymentDuePage({ data, showToast }: Props) {
+export default function VendorPaymentDuePage({ data, showToast, setData }: Props) {
   const [search, setSearch] = useState('');
   const [dueFilter, setDueFilter] = useState<DueFilter>('All');
 
@@ -216,7 +216,15 @@ export default function VendorPaymentDuePage({ data, showToast }: Props) {
                     <td className="px-4 py-3">
                       {!r.isPaid && (
                         <button
-                          onClick={() => showToast('Payment marked as received', 'success')}
+                          onClick={() => {
+                            setData((prev: any) => ({
+                              ...prev,
+                              purchaseOrders: prev.purchaseOrders.map((po: any) =>
+                                po.id === r.id ? { ...po, status: 'Received' } : po
+                              ),
+                            }));
+                            showToast('Payment marked as received', 'success');
+                          }}
                           className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700 transition-colors"
                         >
                           Mark Paid

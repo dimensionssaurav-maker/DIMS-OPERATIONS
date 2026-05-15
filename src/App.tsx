@@ -178,6 +178,9 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
 
   const addOrder = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.showroom_order_no.trim()) { showToast('Order number is required', 'error'); return; }
+    if (!form.customer_name.trim()) { showToast('Customer name is required', 'error'); return; }
+    if (!form.delivery_deadline) { showToast('Delivery deadline is required', 'error'); return; }
     const id = data.orders.length + 1;
     setData((d: AppData) => ({ ...d, orders: [...d.orders, { ...form, id, status: 'Drawing Phase', phone: '', amount: 0 }] }));
     showToast('Order created!');
@@ -221,8 +224,10 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
   const startProduction = (e: React.FormEvent) => {
     e.preventDefault();
     const order = showProdModal;
+    if (!prodForm.product_id) { showToast('Select a product', 'error'); return; }
     const product = data.library.find((p) => p.id === Number(prodForm.product_id));
-    if (!product) { showToast('Select a product', 'error'); return; }
+    if (!product) { showToast('Select a valid product', 'error'); return; }
+    if (Number(prodForm.quantity) < 1) { showToast('Quantity must be at least 1', 'error'); return; }
     const id = data.production.length + 1;
     const now = new Date();
     const pid = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(id).padStart(4, '0')}`;
@@ -331,8 +336,12 @@ function LibraryPage({ data, setData, showToast }: { data: AppData; setData: any
   const [form, setForm] = useState({ sku: '', name: '', category: 'Carpentry', grade: '', store_name: '', default_repeat_count: 1, min_stock_level: 0 });
   const save = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.sku.trim()) { showToast('SKU is required', 'error'); return; }
+    if (!form.name.trim()) { showToast('Product name is required', 'error'); return; }
+    if (!form.grade.trim()) { showToast('Grade is required', 'error'); return; }
+    if (!form.store_name.trim()) { showToast('Store name is required', 'error'); return; }
     const id = data.library.length + 1;
-    setData((d: AppData) => ({ ...d, library: [...d.library, { ...form, id, image_url: '', in_production_qty: 0, invoiced_qty: 0 }] }));
+    setData((d: AppData) => ({ ...d, library: [...d.library, { ...form, id, image_url: '', in_production_qty: 0, invoiced_qty: 0, default_repeat_count: Number(form.default_repeat_count), min_stock_level: Number(form.min_stock_level) }] }));
     showToast('Product added to library!'); setShowModal(false);
     setForm({ sku: '', name: '', category: 'Carpentry', grade: '', store_name: '', default_repeat_count: 1, min_stock_level: 0 });
   };
@@ -412,6 +421,9 @@ function PurchasePage({ data, setData, showToast }: { data: AppData; setData: an
 
   const addSupplier = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!suppForm.name.trim()) { showToast('Supplier name is required', 'error'); return; }
+    if (!suppForm.contact.trim()) { showToast('Contact number is required', 'error'); return; }
+    if (!suppForm.gst_no.trim()) { showToast('GST number is required', 'error'); return; }
     const id = data.suppliers.length + 1;
     setData((d: AppData) => ({ ...d, suppliers: [...d.suppliers, { ...suppForm, id }] }));
     showToast('Supplier added!'); setShowSupplierModal(false); setSuppForm({ name: '', contact: '', gst_no: '', address: '' });
@@ -419,14 +431,20 @@ function PurchasePage({ data, setData, showToast }: { data: AppData; setData: an
 
   const createPO = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!poForm.supplier_id) { showToast('Select a supplier', 'error'); return; }
     const supplier = data.suppliers.find((s) => s.id === Number(poForm.supplier_id));
-    if (!supplier) return;
+    if (!supplier) { showToast('Invalid supplier selected', 'error'); return; }
+    for (const it of poForm.items) {
+      if (!it.material_id) { showToast('Select a material for all items', 'error'); return; }
+      if (Number(it.quantity) <= 0) { showToast('Quantity must be greater than 0', 'error'); return; }
+      if (Number(it.unit_price) <= 0) { showToast('Unit price must be greater than 0', 'error'); return; }
+    }
     const total = poForm.items.reduce((a, i) => a + Number(i.quantity) * Number(i.unit_price), 0);
     const id = data.purchaseOrders.length + 1;
     const po_number = `PO-2026-${String(id + 30).padStart(4, '0')}`;
-    const mat = data.materials.find((m) => m.id === Number(poForm.items[0].material_id));
-    setData((d: AppData) => ({ ...d, purchaseOrders: [...d.purchaseOrders, { id, po_number, supplier_id: Number(poForm.supplier_id), supplier_name: supplier.name, order_date: new Date().toISOString().split('T')[0], status: 'Draft', total_amount: total, items: poForm.items.map((i) => ({ material_id: Number(i.material_id), name: mat?.name ?? '', qty: Number(i.quantity), unit: mat?.unit ?? '', unit_price: Number(i.unit_price) })) }] }));
+    setData((d: AppData) => ({ ...d, purchaseOrders: [...d.purchaseOrders, { id, po_number, supplier_id: Number(poForm.supplier_id), supplier_name: supplier.name, order_date: new Date().toISOString().split('T')[0], status: 'Draft', total_amount: total, items: poForm.items.map((i) => { const mat = d.materials.find((m) => m.id === Number(i.material_id)); return { material_id: Number(i.material_id), name: mat?.name ?? '', qty: Number(i.quantity), unit: mat?.unit ?? '', unit_price: Number(i.unit_price) }; }) }] }));
     showToast(`${po_number} created!`); setShowPOModal(false);
+    setPoForm({ supplier_id: '', items: [{ material_id: '', quantity: 1, unit_price: 0 }] });
   };
 
   const markReceived = (poId: number) => {
@@ -442,8 +460,15 @@ function PurchasePage({ data, setData, showToast }: { data: AppData; setData: an
 
   const issueStoreEntry = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!issueForm.production_item_id) { showToast('Select a production item', 'error'); return; }
+    if (!issueForm.department) { showToast('Select a department', 'error'); return; }
+    for (const it of issueForm.items) {
+      if (!it.material_id) { showToast('Select a material for all rows', 'error'); return; }
+      if (Number(it.quantity) <= 0) { showToast('Quantity must be greater than 0', 'error'); return; }
+    }
     const prod = data.production.find((p) => p.id === Number(issueForm.production_item_id));
-    const newIssues = issueForm.items.map((it, idx) => { const mat = data.materials.find((m) => m.id === Number(it.material_id)); return { id: data.materialIssues.length + idx + 1, production_id: prod?.production_id ?? '', production_item_id: Number(issueForm.production_item_id), material_id: Number(it.material_id), material_name: mat?.name ?? '', quantity: Number(it.quantity), unit: mat?.unit ?? '', department: issueForm.department, timestamp: new Date().toISOString() }; });
+    if (!prod) { showToast('Invalid production item', 'error'); return; }
+    const newIssues = issueForm.items.map((it, idx) => { const mat = data.materials.find((m) => m.id === Number(it.material_id)); return { id: data.materialIssues.length + idx + 1, production_id: prod?.production_id ?? '', production_item_id: Number(issueForm.production_item_id), material_id: Number(it.material_id), material_name: mat?.name ?? '', quantity: Number(it.quantity), unit: mat?.unit ?? '', rate_per_unit: 0, department: issueForm.department, timestamp: new Date().toISOString() }; });
     setData((d: AppData) => ({ ...d, materialIssues: [...d.materialIssues, ...newIssues], materials: d.materials.map((m) => { const it = issueForm.items.find((i) => Number(i.material_id) === m.id); return it ? { ...m, current_stock: Math.max(0, m.current_stock - Number(it.quantity)) } : m; }) }));
     showToast('Materials issued — stock deducted!'); setShowIssueModal(false);
     setIssueForm({ production_item_id: '', department: 'Carpentry', items: [{ material_id: '', quantity: 0 }] });
@@ -600,6 +625,8 @@ function InventoryPage({ data, setData, showToast }: { data: AppData; setData: a
 
   const handleAdjust = (e: React.FormEvent) => {
     e.preventDefault();
+    if (Number(adj.amount) === 0) { showToast('Adjustment amount cannot be zero', 'error'); return; }
+    if (!adj.reason.trim()) { showToast('Reason is required for stock adjustment', 'error'); return; }
     setData((d: AppData) => ({ ...d, materials: d.materials.map((m) => m.id === showAdjust.id ? { ...m, current_stock: Math.max(0, m.current_stock + Number(adj.amount)) } : m) }));
     showToast('Stock adjusted!'); setShowAdjust(null); setAdj({ amount: 0, reason: '' });
   };
@@ -839,8 +866,15 @@ function LabourEntryPage({ data, setData, showToast }: { data: AppData; setData:
 
   const save = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.production_item_id) { showToast('Select a production item', 'error'); return; }
     const prod = data.production.find((p) => p.id === Number(form.production_item_id));
-    if (!prod) { showToast('Select a production item', 'error'); return; }
+    if (!prod) { showToast('Select a valid production item', 'error'); return; }
+    if (!form.department) { showToast('Department is required', 'error'); return; }
+    if (!form.worker_name.trim()) { showToast('Worker name is required', 'error'); return; }
+    if (!form.work_date) { showToast('Work date is required', 'error'); return; }
+    if (Number(form.worker_count) < 1) { showToast('Worker count must be at least 1', 'error'); return; }
+    if (Number(form.hours_worked) <= 0) { showToast('Hours worked must be greater than 0', 'error'); return; }
+    if (Number(form.hourly_rate) <= 0) { showToast('Hourly rate must be greater than 0', 'error'); return; }
     const total = Number(form.worker_count) * Number(form.hours_worked) * Number(form.hourly_rate);
     const newEntry = {
       id: labourEntries.length + 1,
@@ -1055,7 +1089,10 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
 
   const save = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.production_item_id) { showToast('Select a production item', 'error'); return; }
     const prod = data.production.find((p) => p.id === Number(form.production_item_id));
+    if (!prod) { showToast('Select a valid production item', 'error'); return; }
+    if (Number(form.estimated_cost) <= 0) { showToast('Estimated cost must be greater than 0', 'error'); return; }
     const total = Number(form.material_cost) + Number(form.labour_cost) + Number(form.overheads);
     const entry = { ...form, total_cost: total, product_name: prod?.product_name ?? '', production_id: prod?.production_id ?? '', created_at: new Date().toISOString().split('T')[0] };
     if (editId) {
@@ -1243,10 +1280,15 @@ function InvoicingPage({ data, setData, showToast }: { data: AppData; setData: a
 
   const save = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.production_item_id) { showToast('Select a production item', 'error'); return; }
     const prod = data.production.find((p) => p.id === Number(form.production_item_id));
+    if (!prod) { showToast('Select a valid production item', 'error'); return; }
+    if (!form.invoice_no.trim()) { showToast('Invoice number is required', 'error'); return; }
+    if (!form.dispatch_date) { showToast('Dispatch date is required', 'error'); return; }
+    if (Number(form.total_amount) <= 0) { showToast('Amount must be greater than 0', 'error'); return; }
     const gst = Number(form.total_amount) * 0.18;
     const id = data.invoices.length + 1;
-    setData((d: AppData) => ({ ...d, invoices: [...d.invoices, { id, ...form, gst_amount: gst, total_amount: Number(form.total_amount) + gst, customer_name: prod?.customer_name ?? '', status: 'Unpaid' }] }));
+    setData((d: AppData) => ({ ...d, invoices: [...d.invoices, { id, production_item_id: Number(form.production_item_id), invoice_no: form.invoice_no, dispatch_date: form.dispatch_date, gst_amount: gst, total_amount: Number(form.total_amount) + gst, customer_name: prod?.customer_name ?? '', status: 'Unpaid' }] }));
     showToast(`Invoice ${form.invoice_no} generated!`); setShowModal(false);
     setForm({ production_item_id: '', invoice_no: '', dispatch_date: '', total_amount: 0 });
   };
@@ -1496,8 +1538,38 @@ function MastersPage({ data, setData, showToast }: { data: AppData; setData: any
   const items = (data as any)[master] ?? [];
   const save = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editId) { setData((d: any) => ({ ...d, [master]: d[master].map((x: any) => x.id === editId ? { ...x, ...form } : x) })); showToast('Updated!'); }
-    else { const id = (items.length || 0) + 1; setData((d: any) => ({ ...d, [master]: [...(d[master] || []), { ...form, id }] })); showToast('Created!'); }
+    if (master === 'departments' && !form.name?.trim()) { showToast('Department name is required', 'error'); return; }
+    if (master === 'employees') {
+      if (!form.name?.trim()) { showToast('Employee name is required', 'error'); return; }
+      if (!form.employee_code?.trim()) { showToast('Employee code is required', 'error'); return; }
+      if (!form.designation?.trim()) { showToast('Designation is required', 'error'); return; }
+      if (!form.department_id) { showToast('Department is required', 'error'); return; }
+    }
+    if (master === 'users') {
+      if (!form.name?.trim()) { showToast('Full name is required', 'error'); return; }
+      if (!form.username?.trim()) { showToast('Username is required', 'error'); return; }
+      if (!form.role) { showToast('Role is required', 'error'); return; }
+    }
+    if (master === 'suppliers') {
+      if (!form.name?.trim()) { showToast('Supplier name is required', 'error'); return; }
+      if (!form.contact?.trim()) { showToast('Contact is required', 'error'); return; }
+      if (!form.gst_no?.trim()) { showToast('GST number is required', 'error'); return; }
+    }
+    if (master === 'materials') {
+      if (!form.name?.trim()) { showToast('Material name is required', 'error'); return; }
+      if (!form.category?.trim()) { showToast('Category is required', 'error'); return; }
+      if (!form.unit?.trim()) { showToast('Unit is required', 'error'); return; }
+    }
+    const cleanForm = { ...form };
+    if (master === 'materials') {
+      cleanForm.min_stock_level = Number(form.min_stock_level ?? 0);
+      if (!editId) cleanForm.current_stock = 0;
+    }
+    if (master === 'employees') {
+      cleanForm.department_id = Number(form.department_id);
+    }
+    if (editId) { setData((d: any) => ({ ...d, [master]: d[master].map((x: any) => x.id === editId ? { ...x, ...cleanForm } : x) })); showToast('Updated!'); }
+    else { const id = (items.length || 0) + 1; setData((d: any) => ({ ...d, [master]: [...(d[master] || []), { ...cleanForm, id }] })); showToast('Created!'); }
     setShowModal(false); setEditId(null); setForm({});
   };
   const del = (id: number) => { setData((d: any) => ({ ...d, [master]: d[master].filter((x: any) => x.id !== id) })); showToast('Deleted', 'error'); };

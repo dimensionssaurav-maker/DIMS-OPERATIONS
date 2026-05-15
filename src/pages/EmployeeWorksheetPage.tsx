@@ -122,7 +122,8 @@ export default function EmployeeWorksheetPage({ data, setData, showToast }: Prop
     const total_cost = recalcTotal(form);
     const newEntry = { ...form, id: Date.now(), total_cost, production_item_id: Number(form.production_item_id) || 0 };
     setData((prev) => ({ ...prev, labourEntries: [...((prev as any).labourEntries ?? []), newEntry] } as AppData));
-    showToast(`Entry saved — ₹${total_cost.toLocaleString('en-IN')}`);
+    showToast(`Entry saved — ₹${total_cost.toLocaleString('en-IN')}`, 'success');
+    setForm({ ...EMPTY_FORM });
     setShowModal(false);
   };
 

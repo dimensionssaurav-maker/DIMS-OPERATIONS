@@ -64,7 +64,7 @@ export default function HandToolPage({ showToast }: Props) {
   }
 
   function saveModal() {
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) { showToast('Tool name is required', 'error'); return; }
     if (editId !== null) {
       setTools((prev) => prev.map((t) => t.id === editId ? { ...t, ...form } : t));
       showToast('Tool updated', 'success');

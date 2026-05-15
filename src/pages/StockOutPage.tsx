@@ -150,6 +150,7 @@ export default function StockOutPage({ data, showToast, setData }: Props) {
     }));
     showToast(
       `Stock Out recorded — ₹${(Number(form.quantity) * Number(form.rate_per_unit)).toLocaleString('en-IN')}`,
+      'success',
     );
     setShowModal(false);
     setForm({ ...EMPTY_FORM });

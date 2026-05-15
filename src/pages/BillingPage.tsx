@@ -125,6 +125,7 @@ export default function BillingPage({ data, actions, showToast, setData }: Props
     };
     setData((prev) => ({ ...prev, invoices: [newBill, ...prev.invoices] }));
     showToast('Bill added successfully', 'success');
+    setForm({ ...EMPTY_FORM });
     setShowModal(false);
   }
 

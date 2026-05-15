@@ -55,7 +55,8 @@ export default function WIPImagesPage({ data, actions, showToast }: Props) {
       const prod = data.production.find((p) => p.production_id === form.production_id);
       const payload = { ...form, production_item_id: prod?.id ?? form.production_item_id, product_name: prod?.product_name ?? form.product_name };
       await actions.addWIPImage(payload);
-      showToast('WIP image added');
+      showToast('WIP image added', 'success');
+      setForm({ ...EMPTY_FORM });
       setShowModal(false);
     } catch { showToast('Failed to save', 'error'); }
     setSaving(false);
@@ -64,7 +65,7 @@ export default function WIPImagesPage({ data, actions, showToast }: Props) {
   const del = async (id: number) => {
     if (!confirm('Delete this image?')) return;
     await actions.deleteWIPImage(id);
-    showToast('Deleted');
+    showToast('Deleted', 'success');
   };
 
   return (
