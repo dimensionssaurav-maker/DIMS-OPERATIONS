@@ -3,6 +3,20 @@ import { type AppData } from '../data/seed';
 
 interface Props { data: AppData; actions: any; showToast: any; setData: any; }
 
+function exportCSV(rows: any[], filename: string) {
+  if (!rows.length) return;
+  const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const headers = Object.keys(rows[0]);
+  const body = rows.map((r) => headers.map((h) => esc(r[h])).join(','));
+  const csv = [headers.map(esc).join(','), ...body].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 export default function LowInventoryPage({ showToast, data }: Props) {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -65,6 +79,21 @@ export default function LowInventoryPage({ showToast, data }: Props) {
     return pos[pos.length - 1].supplier_name;
   };
 
+  function handleExportCSV() {
+    const rows = filtered.map((m, i) => ({
+      sno: i + 1,
+      name: m.name,
+      category: m.category ?? '',
+      unit: m.unit,
+      min_stock_level: m.min_stock_level,
+      current_stock: m.current_stock,
+      deficit: m.deficit,
+      stock_status: m.stockStatus,
+      last_supplier: getSupplierHint(m.id) ?? '',
+    }));
+    exportCSV(rows, 'low_inventory');
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -73,6 +102,12 @@ export default function LowInventoryPage({ showToast, data }: Props) {
           <h1 className="text-2xl font-bold text-slate-900">Low Inventory</h1>
           <p className="text-sm text-slate-500 mt-0.5">Materials at or below reorder level — action required</p>
         </div>
+        <button
+          onClick={handleExportCSV}
+          className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-md shadow-emerald-200/60 transition-all"
+        >
+          ⬇ Export CSV
+        </button>
       </div>
 
       {/* Stats */}

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { type AppData } from '../data/seed';
+import { StatCard } from '../components/ui';
 
 interface Props { data: AppData; actions: any; showToast: any; }
 
@@ -11,6 +12,20 @@ const PIPELINE_STAGES = [
   { key: 'dispatch', label: 'Ready / In Transit', icon: '🚚', color: 'bg-orange-500', light: 'bg-orange-50 border-orange-200 text-orange-700' },
   { key: 'delivered', label: 'Delivered', icon: '✅', color: 'bg-emerald-500', light: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
 ];
+
+function exportCSV(rows: any[], filename: string) {
+  if (!rows.length) return;
+  const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const headers = Object.keys(rows[0]);
+  const body = rows.map((r) => headers.map((h) => esc(r[h])).join(','));
+  const csv = [headers.map(esc).join(','), ...body].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 function categorize(order: any, production: any[], qualityReports: any[]) {
   const prod = production.find((p) => p.order_id === order.id);
@@ -29,6 +44,7 @@ function categorize(order: any, production: any[], qualityReports: any[]) {
 
 export default function OrderTrackingPage({ data }: Props) {
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'pipeline' | 'table'>('pipeline');
 
   const qualityReports: any[] = data.qualityReports ?? [];
@@ -39,8 +55,15 @@ export default function OrderTrackingPage({ data }: Props) {
       const q = search.toLowerCase();
       list = list.filter((o) => o.customer_name?.toLowerCase().includes(q) || o.showroom_order_no?.toLowerCase().includes(q));
     }
+    if (statusFilter !== 'All') {
+      list = list.filter((o) => {
+        const cat = categorize(o, data.production, qualityReports);
+        const stage = PIPELINE_STAGES.find((s) => s.key === cat);
+        return stage?.label === statusFilter;
+      });
+    }
     return list;
-  }, [data.orders, search]);
+  }, [data.orders, search, statusFilter, data.production, qualityReports]);
 
   const bucketed = useMemo(() => {
     const map: Record<string, any[]> = { received: [], drawing: [], production: [], qc: [], dispatch: [], delivered: [] };
@@ -51,11 +74,52 @@ export default function OrderTrackingPage({ data }: Props) {
     return map;
   }, [orders, data.production, qualityReports]);
 
+  const allBucketed = useMemo(() => {
+    const map: Record<string, any[]> = { received: [], drawing: [], production: [], qc: [], dispatch: [], delivered: [] };
+    for (const order of data.orders) {
+      const cat = categorize(order, data.production, qualityReports);
+      map[cat].push(order);
+    }
+    return map;
+  }, [data.orders, data.production, qualityReports]);
+
+  const totalOrderValue = useMemo(() => data.orders.reduce((s, o) => s + (o.amount ?? 0), 0), [data.orders]);
+
+  function handleExportCSV() {
+    const rows = orders.map((o) => {
+      const prod = data.production.find((p) => p.order_id === o.id);
+      const cat = categorize(o, data.production, qualityReports);
+      const stage = PIPELINE_STAGES.find((s) => s.key === cat);
+      return {
+        order_no: o.showroom_order_no,
+        customer: o.customer_name,
+        phone: o.phone,
+        order_status: o.status,
+        pipeline_stage: stage?.label ?? cat,
+        product: prod?.product_name ?? '',
+        production_id: prod?.production_id ?? '',
+        current_stage: prod?.current_stage ?? '',
+        amount: o.amount ?? '',
+        delivery_deadline: o.delivery_deadline ?? '',
+      };
+    });
+    exportCSV(rows, 'order_tracking');
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-slate-900">Order Tracking</h1><p className="text-sm text-slate-500 mt-0.5">Live pipeline view of all orders from receipt to delivery</p></div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Order Tracking</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Live pipeline view of all orders from receipt to delivery</p>
+        </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-md shadow-emerald-200/60 transition-all"
+          >
+            ⬇ Export CSV
+          </button>
           <button onClick={() => setViewMode('pipeline')} className={`text-sm px-4 py-2 rounded-xl font-bold transition-all ${viewMode === 'pipeline' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
             📊 Pipeline
           </button>
@@ -65,10 +129,28 @@ export default function OrderTrackingPage({ data }: Props) {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex gap-3 items-center">
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="🔍 Search customer, order no…" className="flex-1 text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50" />
-        {search && <button onClick={() => setSearch('')} className="text-xs text-rose-500 font-bold px-2 py-1 hover:bg-rose-50 rounded-lg">✕ Clear</button>}
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard title="Total Orders" value={data.orders.length} icon="📋" colorClass="from-emerald-500 to-teal-600" />
+        <StatCard title="In Production" value={allBucketed.production.length} icon="🏭" colorClass="from-amber-500 to-orange-500" />
+        <StatCard title="Ready to Dispatch" value={allBucketed.dispatch.length} icon="🚚" colorClass="from-orange-500 to-rose-500" />
+        <StatCard title="Total Order Value" value={'₹' + (totalOrderValue / 100000).toFixed(1) + 'L'} icon="💰" colorClass="from-violet-500 to-purple-600" />
+      </div>
+
+      {/* Search + Filter */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-wrap gap-3 items-center">
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="🔍 Search customer, order no…" className="flex-1 min-w-48 text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50" />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
+        >
+          <option value="All">All Stages</option>
+          {PIPELINE_STAGES.map((s) => <option key={s.key} value={s.label}>{s.icon} {s.label}</option>)}
+        </select>
+        {(search || statusFilter !== 'All') && (
+          <button onClick={() => { setSearch(''); setStatusFilter('All'); }} className="text-xs text-rose-500 font-bold px-2 py-1 hover:bg-rose-50 rounded-lg">✕ Clear</button>
+        )}
         <span className="text-xs text-slate-400">{orders.length} order{orders.length !== 1 ? 's' : ''}</span>
       </div>
 
