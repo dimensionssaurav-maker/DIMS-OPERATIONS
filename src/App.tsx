@@ -37,6 +37,7 @@ import PurchaseRegisterPage from './pages/PurchaseRegisterPage';
 import MonthlySaleReportPage from './pages/MonthlySaleReportPage';
 import BillingReportPage from './pages/BillingReportPage';
 import SystemMapPage from './pages/SystemMapPage';
+import AIAssistantPage, { FloatingAIWidget } from './pages/AIAssistantPage';
 import { useData } from './hooks/useData';
 
 // ─── CSV EXPORT ───────────────────────────────────────────────────────────────
@@ -1751,7 +1752,8 @@ export default function App() {
 
     // ── ADMIN ─────────────────────────────────────────────
     { id: 'system_map', icon: '🗺', label: 'System Map', section: 'REPORTS' },
-    { id: 'masters',  icon: '⚙️', label: 'Masters', section: 'ADMIN' },
+    { id: 'ai_assistant', icon: '🤖', label: 'AI Assistant', section: 'ADMIN' },
+    { id: 'masters',  icon: '⚙️', label: 'Masters', section: null },
     { id: 'settings', icon: '🔐', label: 'Settings', section: null },
     ...(user.role === 'Admin' ? [{ id: 'audit_log', icon: '🔍', label: 'Audit Log', section: null }] : []),
   ];
@@ -1802,6 +1804,7 @@ export default function App() {
     monthly_sale: <MonthlySaleReportPage {...sharedProps} />,
     billing_report: <BillingReportPage {...sharedProps} />,
     system_map: <SystemMapPage />,
+    ai_assistant: <AIAssistantPage data={data} showToast={showToast} setPage={setPage} />,
   };
 
   return (
@@ -1893,6 +1896,7 @@ export default function App() {
       </main>
 
       <AnimatePresence>{toast && <Toast msg={toast.msg} type={toast.type} />}</AnimatePresence>
+      <FloatingAIWidget data={data} setPage={setPage} />
     </div>
   );
 }
