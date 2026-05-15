@@ -30,7 +30,7 @@ function daysInReadyState(createdAt: string): number {
   return Math.max(0, Math.floor((TODAY.getTime() - stageReachedDate.getTime()) / (1000 * 60 * 60 * 24)));
 }
 
-export default function ReadyProductPage({ data, showToast }: Props) {
+export default function ReadyProductPage({ data, showToast, setData }: Props) {
   const [search, setSearch] = useState('');
   const [customerFilter, setCustomerFilter] = useState('All');
   const [showDispatched, setShowDispatched] = useState(false);
@@ -208,7 +208,17 @@ export default function ReadyProductPage({ data, showToast }: Props) {
                     <td className="px-3 py-2 text-center">
                       {item.status !== 'Dispatched' && item.current_stage === READY_STAGE && (
                         <button
-                          onClick={() => showToast(`Dispatching ${item.product_name} for ${item.customer_name}`, 'success')}
+                          onClick={() => {
+                            setData((prev: any) => ({
+                              ...prev,
+                              production: prev.production.map((p: any) =>
+                                p.id === item.id
+                                  ? { ...p, status: 'Dispatched' }
+                                  : p
+                              ),
+                            }));
+                            showToast(`${item.product_name} marked as Dispatched`, 'success');
+                          }}
                           className="px-3 py-1 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700 transition"
                         >
                           Dispatch

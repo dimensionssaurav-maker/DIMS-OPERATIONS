@@ -3,18 +3,6 @@ import { type AppData } from '../data/seed';
 
 interface Props { data: AppData; actions: any; showToast: any; setData: any; }
 
-function exportCSV(rows: any[], filename: string) {
-  const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const headers = Object.keys(rows[0] ?? {});
-  const body = rows.map((r) => headers.map((h) => r[h]));
-  const csv = [headers, ...body].map((row) => row.map(esc).join(',')).join('\n');
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-}
-
 type PackingItem = {
   id: number;
   production_id: string;
@@ -27,6 +15,113 @@ type PackingItem = {
   dispatch_date: string;
   created_at: string;
 };
+
+function exportCSV(rows: any[], filename: string) {
+  const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const headers = Object.keys(rows[0] ?? {});
+  const body = rows.map((r) => headers.map((h) => r[h]));
+  const csv = [headers, ...body].map((row) => row.map(esc).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+}
+
+function printPackingList(items: PackingItem[]) {
+  const rows = items.map((item, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${item.production_id}</td>
+      <td>${item.product_name}</td>
+      <td>${item.customer_name}</td>
+      <td>${item.showroom_order_no}</td>
+      <td style="text-align:center">${item.quantity}</td>
+      <td>${item.current_stage}</td>
+      <td><span style="padding:2px 8px;border-radius:12px;font-weight:700;background:${item.packing_status === 'Packed' ? '#d1fae5' : '#fef3c7'};color:${item.packing_status === 'Packed' ? '#065f46' : '#92400e'}">${item.packing_status}</span></td>
+      <td>${item.dispatch_date || '—'}</td>
+    </tr>
+  `).join('');
+  const win = window.open('', '_blank');
+  if (!win) return;
+  win.document.write(`
+    <html><head><title>Packing List</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; color: #1e293b; }
+      h1 { font-size: 20px; margin: 0 0 4px; }
+      .subtitle { color: #64748b; font-size: 11px; margin-bottom: 16px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+      th { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; }
+      td { border: 1px solid #e2e8f0; padding: 8px; }
+      .footer { margin-top: 24px; font-size: 10px; color: #94a3b8; text-align: right; }
+      @media print { body { margin: 10px; } }
+    </style></head><body>
+    <h1>PACKING LIST</h1>
+    <p class="subtitle">FurniTrack ERP · Factory Operations · Generated: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+    <table>
+      <thead><tr>
+        <th>#</th><th>Production ID</th><th>Product Name</th><th>Customer</th>
+        <th>Showroom Order</th><th>Qty</th><th>Stage</th><th>Packing Status</th><th>Dispatch Date</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="footer">Total items: ${items.length} &nbsp;|&nbsp; Packed: ${items.filter(i => i.packing_status === 'Packed').length} &nbsp;|&nbsp; Pending: ${items.filter(i => i.packing_status === 'Pending').length}</p>
+    </body></html>
+  `);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.close();
+}
+
+function printSingleItem(item: PackingItem) {
+  const win = window.open('', '_blank');
+  if (!win) return;
+  win.document.write(`
+    <html><head><title>Packing Slip — ${item.production_id}</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; color: #1e293b; }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      .subtitle { color: #64748b; font-size: 11px; margin-bottom: 16px; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+      .box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; }
+      .box h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin: 0 0 8px; }
+      .row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+      .label { color: #64748b; }
+      .value { font-weight: 600; }
+      .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; background: ${item.packing_status === 'Packed' ? '#d1fae5' : '#fef3c7'}; color: ${item.packing_status === 'Packed' ? '#065f46' : '#92400e'}; }
+      .footer { margin-top: 24px; padding-top: 12px; border-top: 2px solid #1e293b; display: flex; justify-content: space-between; font-size: 10px; color: #64748b; }
+      .sig { width: 150px; }
+      .sig-line { border-top: 1px solid #94a3b8; margin-top: 40px; padding-top: 4px; text-align: center; }
+      @media print { body { margin: 10px; } }
+    </style></head><body>
+    <h1>PACKING SLIP — ${item.production_id}</h1>
+    <p class="subtitle">FurniTrack ERP &middot; ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+    <div class="grid">
+      <div class="box"><h3>Customer / Ship To</h3>
+        <div class="row"><span class="value">${item.customer_name}</span></div>
+        <div class="row"><span class="label">Order:</span><span class="value">${item.showroom_order_no}</span></div>
+      </div>
+      <div class="box"><h3>Item Details</h3>
+        <div class="row"><span class="label">Product:</span><span class="value">${item.product_name}</span></div>
+        <div class="row"><span class="label">Qty:</span><span class="value">${item.quantity} pcs</span></div>
+        <div class="row"><span class="label">Stage:</span><span class="value">${item.current_stage}</span></div>
+        <div class="row"><span class="label">Status:</span><span class="badge">${item.packing_status}</span></div>
+        ${item.dispatch_date ? `<div class="row"><span class="label">Dispatch Date:</span><span class="value">${item.dispatch_date}</span></div>` : ''}
+      </div>
+    </div>
+    <div class="footer">
+      <div class="sig"><div class="sig-line">Packed By</div></div>
+      <div class="sig"><div class="sig-line">QC Approved By</div></div>
+      <div class="sig"><div class="sig-line">Dispatched By</div></div>
+    </div>
+    </body></html>
+  `);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.close();
+}
 
 export default function PackingListPage({ data, showToast }: Props) {
   const [search, setSearch] = useState('');
@@ -101,13 +196,19 @@ export default function PackingListPage({ data, showToast }: Props) {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => showToast('PDF generated!', 'success')}
+            onClick={() => {
+              if (!filtered.length) { showToast('No items to print', 'error'); return; }
+              printPackingList(filtered);
+            }}
             className="flex items-center gap-1.5 text-sm bg-emerald-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-emerald-700 shadow-sm transition-colors"
           >
-            ⬇ Generate PDF
+            🖨 Generate PDF
           </button>
           <button
-            onClick={() => csvRows.length && exportCSV(csvRows, 'packing_list')}
+            onClick={() => {
+              if (!csvRows.length) { showToast('No data to export', 'error'); return; }
+              exportCSV(csvRows, 'packing_list');
+            }}
             className="flex items-center gap-1.5 text-sm border border-slate-200 bg-white px-4 py-2 rounded-xl font-semibold hover:bg-slate-50 shadow-sm"
           >
             ⬇ Export CSV
@@ -216,10 +317,10 @@ export default function PackingListPage({ data, showToast }: Props) {
                     <td className="px-4 py-3 text-slate-400 text-xs">—</td>
                     <td className="px-4 py-3">
                       <button
-                        onClick={() => showToast('Printing packing list...', 'success')}
+                        onClick={() => printSingleItem(item)}
                         className="text-xs border border-slate-200 bg-white text-slate-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap"
                       >
-                        Print
+                        🖨 Print
                       </button>
                     </td>
                   </tr>

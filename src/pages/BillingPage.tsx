@@ -1,6 +1,54 @@
 import { useState, useMemo } from 'react';
 import { type AppData } from '../data/seed';
 
+function printInvoice(inv: any) {
+  const subTotal = (inv.total_amount ?? 0) - (inv.gst_amount ?? 0);
+  const win = window.open('', '_blank');
+  if (!win) return;
+  win.document.write(`
+    <html><head><title>Invoice — ${inv.invoice_no}</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; color: #1e293b; }
+      h1 { font-size: 22px; margin: 0 0 2px; letter-spacing: -0.5px; }
+      .subtitle { color: #64748b; font-size: 11px; margin-bottom: 20px; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+      .box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; }
+      .box h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin: 0 0 8px; letter-spacing: 0.05em; }
+      .row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
+      .label { color: #64748b; }
+      .value { font-weight: 600; }
+      .total-row { display: flex; justify-content: space-between; padding: 10px 0; border-top: 2px solid #1e293b; font-size: 14px; font-weight: 700; margin-top: 4px; }
+      .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; background: ${inv.status === 'Paid' ? '#d1fae5' : '#fee2e2'}; color: ${inv.status === 'Paid' ? '#065f46' : '#991b1b'}; }
+      .footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center; }
+      @media print { body { margin: 10px; } }
+    </style></head><body>
+    <h1>TAX INVOICE</h1>
+    <p class="subtitle">FurniTrack ERP &middot; Factory Operations</p>
+    <div class="grid">
+      <div class="box"><h3>Bill To</h3>
+        <div class="row"><span class="value" style="font-size:14px">${inv.customer_name}</span></div>
+      </div>
+      <div class="box"><h3>Invoice Details</h3>
+        <div class="row"><span class="label">Invoice No:</span><span class="value" style="font-family:monospace">${inv.invoice_no}</span></div>
+        <div class="row"><span class="label">Dispatch Date:</span><span class="value">${inv.dispatch_date ?? '—'}</span></div>
+        <div class="row"><span class="label">Status:</span><span class="badge">${inv.status}</span></div>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Amount Breakdown</h3>
+      <div class="row"><span class="label">Sub Total (before GST)</span><span class="value">&#8377;${Number(subTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></div>
+      <div class="row"><span class="label">GST Amount</span><span class="value">&#8377;${Number(inv.gst_amount ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></div>
+      <div class="total-row"><span>Grand Total</span><span>&#8377;${Number(inv.total_amount ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></div>
+    </div>
+    <p class="footer">Thank you for your business &middot; FurniTrack ERP &middot; Printed on ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+    </body></html>
+  `);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.close();
+}
+
 interface Props {
   data: AppData;
   actions: any;
@@ -63,14 +111,17 @@ export default function BillingPage({ data, actions, showToast, setData }: Props
   const invoices = data.invoices ?? [];
 
   const stats = useMemo(() => ({
-    total: invoices.length,
-    paid: invoices.filter((i) => i.status === 'Paid').length,
-    unpaid: invoices.filter((i) => i.status === 'Unpaid').length,
-    totalBilled: invoices.reduce((acc, i) => acc + (i.total_amount ?? 0), 0),
-  }), [invoices]);
+    total: activeInvoices.length,
+    paid: activeInvoices.filter((i) => i.status === 'Paid').length,
+    unpaid: activeInvoices.filter((i) => i.status === 'Unpaid').length,
+    totalBilled: activeInvoices.reduce((acc, i) => acc + (i.total_amount ?? 0), 0),
+  }), [activeInvoices]);
+
+  const activeInvoices = useMemo(() => invoices.filter((i) => (i.status as any) !== 'Cancelled'), [invoices]);
+  const cancelledInvoices = useMemo(() => invoices.filter((i) => (i.status as any) === 'Cancelled'), [invoices]);
 
   const filtered = useMemo(() => {
-    let list = [...invoices];
+    let list = [...activeInvoices];
     if (statusFilter) list = list.filter((i) => i.status === statusFilter);
     if (search) {
       const q = search.toLowerCase();
@@ -82,7 +133,7 @@ export default function BillingPage({ data, actions, showToast, setData }: Props
     if (dateFrom) list = list.filter((i) => i.dispatch_date >= dateFrom);
     if (dateTo) list = list.filter((i) => i.dispatch_date <= dateTo);
     return list;
-  }, [invoices, statusFilter, search, dateFrom, dateTo]);
+  }, [activeInvoices, statusFilter, search, dateFrom, dateTo]);
 
   const uniqueCustomers = useMemo(() => {
     const names = new Set((data.orders ?? []).map((o) => o.customer_name));
@@ -105,6 +156,15 @@ export default function BillingPage({ data, actions, showToast, setData }: Props
       invoices: prev.invoices.map((i) => (i.id === id ? { ...i, status: 'Paid' as const } : i)),
     }));
     showToast('Invoice marked as Paid', 'success');
+  }
+
+  function handleCancelBill(id: number) {
+    if (!confirm('Cancel this bill? This cannot be undone.')) return;
+    setData((prev) => ({
+      ...prev,
+      invoices: prev.invoices.map((i) => (i.id === id ? { ...i, status: 'Cancelled' as any } : i)),
+    }));
+    showToast('Bill cancelled', 'success');
   }
 
   function handleAddBill(e: React.FormEvent) {
@@ -294,16 +354,31 @@ export default function BillingPage({ data, actions, showToast, setData }: Props
                             </span>
                           </td>
                           <td className="px-5 py-3">
-                            {inv.status === 'Unpaid' ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <button
-                                onClick={() => handleMarkPaid(inv.id)}
-                                className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-bold transition-colors"
+                                onClick={() => printInvoice(inv)}
+                                className="text-xs border border-slate-200 bg-white text-slate-600 px-2.5 py-1.5 rounded-lg font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap"
+                                title="Print Invoice"
                               >
-                                Mark Paid
+                                🖨 Print
                               </button>
-                            ) : (
-                              <span className="text-xs text-slate-300 font-medium">—</span>
-                            )}
+                              {inv.status === 'Unpaid' && (
+                                <button
+                                  onClick={() => handleMarkPaid(inv.id)}
+                                  className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg font-bold transition-colors whitespace-nowrap"
+                                >
+                                  Mark Paid
+                                </button>
+                              )}
+                              {(inv.status as any) !== 'Cancelled' && (
+                                <button
+                                  onClick={() => handleCancelBill(inv.id)}
+                                  className="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg font-semibold border border-rose-200 transition-colors whitespace-nowrap"
+                                >
+                                  Cancel
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -331,12 +406,42 @@ export default function BillingPage({ data, actions, showToast, setData }: Props
                   ))}
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td colSpan={9} className="px-5 py-12 text-center text-slate-400">
-                    No cancelled bills found.
-                  </td>
-                </tr>
+              <tbody className="divide-y divide-slate-100">
+                {cancelledInvoices.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-5 py-12 text-center text-slate-400">
+                      No cancelled bills found.
+                    </td>
+                  </tr>
+                ) : (
+                  cancelledInvoices.map((inv: any, idx: number) => {
+                    const subTotal = (inv.total_amount ?? 0) - (inv.gst_amount ?? 0);
+                    return (
+                      <tr key={inv.id} className="hover:bg-slate-50 opacity-70">
+                        <td className="px-5 py-3 text-slate-400 text-xs font-semibold">{idx + 1}</td>
+                        <td className="px-5 py-3 font-mono text-xs text-slate-500 font-bold">{inv.invoice_no}</td>
+                        <td className="px-5 py-3 font-semibold text-slate-700">{inv.customer_name}</td>
+                        <td className="px-5 py-3 text-slate-400 text-xs whitespace-nowrap">{inv.dispatch_date}</td>
+                        <td className="px-5 py-3 text-slate-500">{fmtCurrency(subTotal)}</td>
+                        <td className="px-5 py-3 text-slate-400">{fmtCurrency(inv.gst_amount)}</td>
+                        <td className="px-5 py-3 font-bold text-slate-600">{fmtCurrency(inv.total_amount)}</td>
+                        <td className="px-5 py-3">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500">
+                            Cancelled
+                          </span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <button
+                            onClick={() => printInvoice(inv)}
+                            className="text-xs border border-slate-200 bg-white text-slate-600 px-2.5 py-1.5 rounded-lg font-semibold hover:bg-slate-50 transition-colors"
+                          >
+                            🖨 Print
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
