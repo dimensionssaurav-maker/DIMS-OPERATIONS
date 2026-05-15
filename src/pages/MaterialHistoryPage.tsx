@@ -139,9 +139,17 @@ export default function MaterialHistoryPage({ data }: Props) {
   return (
     <div className="space-y-6 p-4">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold text-slate-800">Material History</h1>
-        <p className="text-sm text-slate-500">Complete ledger of material movements — IN (received) and OUT (issued)</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Material History</h1>
+          <p className="text-sm text-slate-500">Complete ledger of material movements — IN (received) and OUT (issued)</p>
+        </div>
+        <button
+          onClick={() => exportCSV(csvRows, 'material_history_full')}
+          className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-sm transition-all"
+        >
+          ⬇ Export All
+        </button>
       </div>
 
       {/* Stats */}
@@ -193,6 +201,14 @@ export default function MaterialHistoryPage({ data }: Props) {
             <span>To</span>
             <input type="date" className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
           </div>
+          {(search || typeFilter !== 'All' || categoryFilter !== 'All' || dateFrom || dateTo) && (
+            <button
+              onClick={() => { setSearch(''); setTypeFilter('All'); setCategoryFilter('All'); setDateFrom(''); setDateTo(''); }}
+              className="text-xs text-rose-500 font-bold px-2 py-1 hover:bg-rose-50 rounded-lg"
+            >
+              ✕ Clear
+            </button>
+          )}
         </div>
       </div>
 

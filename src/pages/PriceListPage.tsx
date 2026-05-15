@@ -492,7 +492,11 @@ th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppe
               </button>
               <button onClick={() => {
                 if (!addDate) { showToast('Please select a date', 'error'); return; }
-                showToast(`Price list generated for ${addDate}!`);
+                // Apply selected date as both from and to so the table filters to that day
+                setDateFrom(addDate);
+                setDateTo(addDate);
+                setPage(1);
+                showToast(`Showing price list for ${addDate}`);
                 setShowAdd(false);
                 setAddDate('');
               }} className="px-6 py-2.5 text-sm text-white font-bold bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl hover:from-emerald-700 hover:to-teal-700 shadow-sm transition-all">

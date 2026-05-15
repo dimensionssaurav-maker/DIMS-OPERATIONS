@@ -1777,7 +1777,7 @@ export default function App() {
     stock_out: <StockOutPage {...sharedProps} />,
     production_report: <ProductionReportPage {...sharedProps} />,
     raw_material_report: <RawMaterialReportPage {...sharedProps} />,
-    low_inventory: <LowInventoryPage {...sharedProps} />,
+    low_inventory: <LowInventoryPage {...sharedProps} setPage={setPage} />,
     employee_record: <EmployeeRecordPage {...sharedProps} />,
     quality: <QualityReportPage {...sharedProps} />,
     packing_slip: <PackingSlipPage {...sharedProps} />,

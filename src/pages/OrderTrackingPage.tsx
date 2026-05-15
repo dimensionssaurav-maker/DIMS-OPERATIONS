@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { type AppData } from '../data/seed';
 import { StatCard } from '../components/ui';
 
-interface Props { data: AppData; actions: any; showToast: any; }
+interface Props { data: AppData; actions: any; showToast: (msg: string, type?: string) => void; }
 
 const PIPELINE_STAGES = [
   { key: 'received', label: 'Order Received', icon: '📥', color: 'bg-blue-500', light: 'bg-blue-50 border-blue-200 text-blue-700' },
@@ -42,7 +42,44 @@ function categorize(order: any, production: any[], qualityReports: any[]) {
   return 'production';
 }
 
-export default function OrderTrackingPage({ data }: Props) {
+function printOrderTracking(orders: any[], bucketed: Record<string, any[]>, stages: typeof PIPELINE_STAGES, totalOrderValue: number, showToast: any) {
+  const win = window.open('', '_blank', 'width=1200,height=800');
+  if (!win) { showToast('Allow popups and try again', 'error'); return; }
+  const stageRows = stages.map(stage => {
+    const items = bucketed[stage.key] ?? [];
+    return `<div style="break-inside:avoid;margin-bottom:16px;">
+      <div style="background:${stage.key === 'delivered' ? '#059669' : stage.key === 'dispatch' ? '#ea580c' : stage.key === 'qc' ? '#4f46e5' : stage.key === 'production' ? '#d97706' : stage.key === 'drawing' ? '#7c3aed' : '#2563eb'};color:#fff;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:700;font-size:12px;">
+        ${stage.icon} ${stage.label} (${items.length})
+      </div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-top:none;">
+        ${items.length === 0 ? '<tr><td style="padding:8px;color:#94a3b8;font-size:11px;">No orders</td></tr>' :
+          items.map(o => `<tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:6px 8px;font-size:11px;font-weight:600;">${o.customer_name}</td>
+            <td style="padding:6px 8px;font-size:10px;color:#6366f1;font-family:monospace;">${o.showroom_order_no || '#'+o.id}</td>
+            <td style="padding:6px 8px;font-size:10px;color:#64748b;">${o.delivery_deadline?.slice(0,10) || '—'}</td>
+          </tr>`).join('')}
+      </table>
+    </div>`;
+  }).join('');
+  win.document.write(`<!DOCTYPE html><html><head><title>Order Tracking</title><meta charset="utf-8"/>
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;padding:24px;color:#1e293b;}
+.header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid #059669;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.btn{background:#059669;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px;}
+@media print{.btn{display:none;}@page{margin:10mm;size:A4 landscape;}}</style></head>
+<body>
+<button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+<div class="header">
+  <div><div style="font-size:20px;font-weight:900;color:#064e3b;">Order Tracking Pipeline</div>
+  <div style="font-size:11px;color:#64748b;margin-top:3px;">${orders.length} orders · Total Value ₹${totalOrderValue.toLocaleString('en-IN')}</div></div>
+  <div style="font-size:11px;color:#64748b;text-align:right;">Generated: ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div>
+</div>
+<div class="grid">${stageRows}</div>
+</body></html>`);
+  win.document.close();
+}
+
+export default function OrderTrackingPage({ data, showToast }: Props) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'pipeline' | 'table'>('pipeline');
@@ -119,6 +156,12 @@ export default function OrderTrackingPage({ data }: Props) {
             className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-md shadow-emerald-200/60 transition-all"
           >
             ⬇ Export CSV
+          </button>
+          <button
+            onClick={() => printOrderTracking(orders, bucketed, PIPELINE_STAGES, totalOrderValue, showToast)}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-sm"
+          >
+            🖨 PDF
           </button>
           <button onClick={() => setViewMode('pipeline')} className={`text-sm px-4 py-2 rounded-xl font-bold transition-all ${viewMode === 'pipeline' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
             📊 Pipeline

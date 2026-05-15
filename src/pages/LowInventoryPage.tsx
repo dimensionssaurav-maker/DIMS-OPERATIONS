@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { type AppData } from '../data/seed';
 
-interface Props { data: AppData; actions: any; showToast: any; setData: any; }
+interface Props { data: AppData; actions: any; showToast: any; setData: any; setPage?: (page: string) => void; }
 
 function exportCSV(rows: any[], filename: string) {
   if (!rows.length) return;
@@ -17,7 +17,7 @@ function exportCSV(rows: any[], filename: string) {
   URL.revokeObjectURL(a.href);
 }
 
-export default function LowInventoryPage({ showToast, data }: Props) {
+export default function LowInventoryPage({ showToast, data, setPage }: Props) {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
 
@@ -102,12 +102,51 @@ export default function LowInventoryPage({ showToast, data }: Props) {
           <h1 className="text-2xl font-bold text-slate-900">Low Inventory</h1>
           <p className="text-sm text-slate-500 mt-0.5">Materials at or below reorder level — action required</p>
         </div>
-        <button
-          onClick={handleExportCSV}
-          className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-md shadow-emerald-200/60 transition-all"
-        >
-          ⬇ Export CSV
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const win = window.open('', '_blank', 'width=1000,height=700');
+              if (!win) { showToast('Allow popups and try again', 'error'); return; }
+              const tableRows = filtered.map((m, i) => `
+                <tr style="border-bottom:1px solid #e2e8f0;background:${m.stockStatus === 'Out of Stock' ? '#fff1f2' : m.stockStatus === 'Low' ? '#fffbeb' : '#fff'};">
+                  <td style="padding:6px 8px;color:#94a3b8;font-size:11px;">${i + 1}</td>
+                  <td style="padding:6px 8px;font-weight:600;font-size:11px;">${m.name}</td>
+                  <td style="padding:6px 8px;font-size:11px;">${m.category ?? '—'}</td>
+                  <td style="padding:6px 8px;font-size:11px;">${m.unit}</td>
+                  <td style="padding:6px 8px;text-align:right;font-size:11px;">${m.min_stock_level}</td>
+                  <td style="padding:6px 8px;text-align:right;font-weight:700;font-size:11px;">${m.current_stock}</td>
+                  <td style="padding:6px 8px;text-align:right;font-size:11px;color:${m.deficit > 0 ? '#e11d48' : '#059669'};">${m.deficit > 0 ? '−' + m.deficit : m.deficit < 0 ? '+' + Math.abs(m.deficit) : '0'}</td>
+                  <td style="padding:6px 8px;font-size:11px;font-weight:700;color:${m.stockStatus === 'Out of Stock' ? '#e11d48' : m.stockStatus === 'Low' ? '#d97706' : '#059669'};">${m.stockStatus}</td>
+                </tr>`).join('');
+              win.document.write(`<!DOCTYPE html><html><head><title>Low Inventory Report</title><meta charset="utf-8"/>
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;padding:24px;color:#1e293b;}
+.header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid #e11d48;}
+table{width:100%;border-collapse:collapse;}thead tr{background:#fff1f2;}
+th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#64748b;border-bottom:2px solid #fecdd3;}
+.btn{background:#e11d48;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px;}
+@media print{.btn{display:none;}@page{margin:10mm;size:A4 portrait;}}</style></head>
+<body><button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+<div class="header"><div><div style="font-size:20px;font-weight:900;color:#881337;">Low Inventory Alert Report</div>
+<div style="font-size:11px;color:#64748b;margin-top:3px;">${filtered.filter(r => r.stockStatus !== 'Ok').length} items need attention</div></div>
+<div style="font-size:11px;color:#64748b;text-align:right;">Generated: ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div></div>
+<table><thead><tr>
+  <th>#</th><th>Material Name</th><th>Category</th><th>Unit</th>
+  <th style="text-align:right;">Min Level</th><th style="text-align:right;">Current Stock</th>
+  <th style="text-align:right;">Deficit</th><th>Status</th>
+</tr></thead><tbody>${tableRows}</tbody></table></body></html>`);
+              win.document.close();
+            }}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-sm"
+          >
+            🖨 PDF
+          </button>
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-md shadow-emerald-200/60 transition-all"
+          >
+            ⬇ Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -196,7 +235,7 @@ export default function LowInventoryPage({ showToast, data }: Props) {
                       {m.stockStatus !== 'Ok' ? (
                         <div className="flex flex-col gap-0.5">
                           <button
-                            onClick={() => showToast('Navigate to Purchase → New PO', 'success')}
+                            onClick={() => { if (setPage) { setPage('purchase'); } else { showToast('Go to Purchase & POs to raise a new PO', 'success'); } }}
                             className="inline-flex items-center gap-1 text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-700 transition-colors whitespace-nowrap"
                           >
                             + Raise PO

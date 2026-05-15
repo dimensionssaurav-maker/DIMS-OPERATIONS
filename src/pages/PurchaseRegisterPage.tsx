@@ -37,7 +37,56 @@ const STATUS_COLORS: Record<string, string> = {
   Cancelled: 'bg-rose-100 text-rose-700',
 };
 
-export default function PurchaseRegisterPage({ data }: Props) {
+function printPurchaseRegister(items: LineItem[], grandTotal: number, showToast: any) {
+  const win = window.open('', '_blank', 'width=1200,height=800');
+  if (!win) { showToast('Allow popups and try again', 'error'); return; }
+  const rows = items.map((item, idx) => `
+    <tr style="border-bottom:1px solid #e2e8f0;font-size:11px;">
+      <td style="padding:6px 8px;color:#94a3b8;">${idx + 1}</td>
+      <td style="padding:6px 8px;font-family:monospace;color:#6366f1;">${item.po_number}</td>
+      <td style="padding:6px 8px;">${item.supplier_name}</td>
+      <td style="padding:6px 8px;">${item.order_date}</td>
+      <td style="padding:6px 8px;font-weight:600;">${item.material_name}</td>
+      <td style="padding:6px 8px;text-align:right;">${item.qty}</td>
+      <td style="padding:6px 8px;">${item.unit}</td>
+      <td style="padding:6px 8px;text-align:right;">₹${item.unit_price.toLocaleString('en-IN')}</td>
+      <td style="padding:6px 8px;text-align:right;font-weight:700;color:#059669;">₹${item.amount.toLocaleString('en-IN')}</td>
+      <td style="padding:6px 8px;text-align:center;">${item.po_status}</td>
+    </tr>`).join('');
+  win.document.write(`<!DOCTYPE html><html><head><title>Purchase Register</title><meta charset="utf-8"/>
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;padding:24px;color:#1e293b;}
+.header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid #059669;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:#f0fdf4;}
+th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#64748b;border-bottom:2px solid #d1fae5;}
+.tfoot td{background:#f0fdf4;font-weight:900;font-size:11px;border-top:2px solid #d1fae5;padding:6px 8px;}
+.btn{background:#059669;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px;}
+@media print{.btn{display:none;}@page{margin:10mm;size:A4 landscape;}}</style></head>
+<body>
+<button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+<div class="header">
+  <div><div style="font-size:20px;font-weight:900;color:#064e3b;">Purchase Register</div>
+  <div style="font-size:11px;color:#64748b;margin-top:3px;">${items.length} line items</div></div>
+  <div style="font-size:11px;color:#64748b;text-align:right;">Generated: ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div>
+</div>
+<table>
+<thead><tr>
+  <th>#</th><th>PO Number</th><th>Supplier</th><th>Order Date</th><th>Material</th>
+  <th style="text-align:right;">Qty</th><th>Unit</th><th style="text-align:right;">Rate/Unit</th>
+  <th style="text-align:right;">Amount</th><th style="text-align:center;">Status</th>
+</tr></thead>
+<tbody>${rows}</tbody>
+<tfoot><tr class="tfoot">
+  <td colspan="8" style="text-align:right;">Grand Total:</td>
+  <td style="text-align:right;">₹${grandTotal.toLocaleString('en-IN')}</td>
+  <td></td>
+</tr></tfoot>
+</table>
+</body></html>`);
+  win.document.close();
+}
+
+export default function PurchaseRegisterPage({ data, showToast }: Props) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [dateFrom, setDateFrom] = useState('');
@@ -122,9 +171,25 @@ export default function PurchaseRegisterPage({ data }: Props) {
   return (
     <div className="space-y-6 p-4">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold text-slate-800">Purchase Register</h1>
-        <p className="text-sm text-slate-500">Complete purchase history by date</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Purchase Register</h1>
+          <p className="text-sm text-slate-500">Complete purchase history by date</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => printPurchaseRegister(filteredLineItems, grandTotal, showToast)}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-sm"
+          >
+            🖨 PDF
+          </button>
+          <button
+            onClick={() => exportCSV(csvRows, 'purchase_register')}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-sm transition-all"
+          >
+            ⬇ Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -176,6 +241,14 @@ export default function PurchaseRegisterPage({ data }: Props) {
             />
             Group by PO
           </label>
+          {(search || statusFilter !== 'All' || dateFrom || dateTo) && (
+            <button
+              onClick={() => { setSearch(''); setStatusFilter('All'); setDateFrom(''); setDateTo(''); }}
+              className="text-xs text-rose-500 font-bold px-2 py-1 hover:bg-rose-50 rounded-lg"
+            >
+              ✕ Clear Filters
+            </button>
+          )}
         </div>
       </div>
 

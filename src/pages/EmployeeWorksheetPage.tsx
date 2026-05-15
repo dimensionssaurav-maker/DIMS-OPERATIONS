@@ -144,6 +144,53 @@ export default function EmployeeWorksheetPage({ data, setData, showToast }: Prop
           <p className="text-sm text-slate-500 mt-0.5">Worker-wise attendance, hours, and labour cost per production item</p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const entriesToPrint = selectedEntries.length ? selectedEntries : filteredEntries;
+              const win = window.open('', '_blank', 'width=1200,height=800');
+              if (!win) return;
+              const rows = entriesToPrint.map((l: any, idx: number) => `
+                <tr style="border-bottom:1px solid #e2e8f0;font-size:11px;">
+                  <td style="padding:5px 8px;">${l.work_date}</td>
+                  <td style="padding:5px 8px;font-weight:600;">${l.worker_name}</td>
+                  <td style="padding:5px 8px;">${l.department}</td>
+                  <td style="padding:5px 8px;font-family:monospace;color:#6366f1;">${l.production_id}</td>
+                  <td style="padding:5px 8px;">${l.product_name}</td>
+                  <td style="padding:5px 8px;">${l.shift}</td>
+                  <td style="padding:5px 8px;text-align:center;">${l.worker_count}</td>
+                  <td style="padding:5px 8px;text-align:center;">${l.hours_worked}h</td>
+                  <td style="padding:5px 8px;text-align:right;">₹${Number(l.hourly_rate).toLocaleString('en-IN')}</td>
+                  <td style="padding:5px 8px;text-align:right;font-weight:700;color:#059669;">₹${Number(l.total_cost).toLocaleString('en-IN')}</td>
+                </tr>`).join('');
+              const totalHrs = entriesToPrint.reduce((s: number, l: any) => s + Number(l.hours_worked), 0);
+              const totalCost = entriesToPrint.reduce((s: number, l: any) => s + Number(l.total_cost), 0);
+              win.document.write(`<!DOCTYPE html><html><head><title>Employee Worksheet</title><meta charset="utf-8"/>
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;padding:24px;color:#1e293b;}
+.header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid #6366f1;}
+table{width:100%;border-collapse:collapse;}thead tr{background:#eef2ff;}
+th{padding:7px 8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#64748b;border-bottom:2px solid #c7d2fe;white-space:nowrap;}
+.tfoot td{background:#eef2ff;font-weight:900;border-top:2px solid #c7d2fe;padding:6px 8px;}
+.btn{background:#6366f1;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px;}
+@media print{.btn{display:none;}@page{margin:8mm;size:A4 landscape;}}</style></head>
+<body><button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+<div class="header"><div><div style="font-size:18px;font-weight:900;color:#312e81;">Employee Worksheet${selectedEmp ? ' — ' + selectedEmp.name : ''}</div>
+<div style="font-size:11px;color:#64748b;margin-top:2px;">${entriesToPrint.length} entries</div></div>
+<div style="font-size:11px;color:#64748b;text-align:right;">Generated: ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div></div>
+<table><thead><tr>
+  <th>Date</th><th>Employee</th><th>Dept</th><th>Production ID</th><th>Product</th>
+  <th>Shift</th><th>Workers</th><th>Hours</th><th style="text-align:right;">Rate/hr</th><th style="text-align:right;">Total Cost</th>
+</tr></thead><tbody>${rows}</tbody>
+<tfoot><tr class="tfoot">
+  <td colspan="7">Totals</td>
+  <td style="text-align:center;">${totalHrs}h</td><td></td>
+  <td style="text-align:right;">₹${totalCost.toLocaleString('en-IN')}</td>
+</tr></tfoot></table></body></html>`);
+              win.document.close();
+            }}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-sm"
+          >
+            🖨 PDF
+          </button>
           <button onClick={exportWorkerCSV} className="flex items-center gap-1.5 text-sm border border-slate-200 bg-white px-4 py-2 rounded-xl font-semibold hover:bg-slate-50">⬇ Export CSV</button>
           <button onClick={openAdd} className="flex items-center gap-1.5 text-sm bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 shadow-sm">+ Add Entry</button>
         </div>

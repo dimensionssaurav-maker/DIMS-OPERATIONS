@@ -81,6 +81,20 @@ export default function ConsolidatedReportPage({ data }: Props) {
             if (activeTab === 'production') exportCSV(productionRows, 'production_report');
             else if (activeTab === 'sales') exportCSV(salesRows, 'sales_report');
             else if (activeTab === 'materials') exportCSV(materialRows, 'materials_report');
+            else {
+              // Overview tab: export all KPI data as a summary CSV
+              const overviewExport = [
+                { metric: 'Total Orders', value: overview.orders.total, sub: `${overview.orders.dispatched} dispatched` },
+                { metric: 'Total Production Items', value: overview.production.total, sub: `${overview.production.active} active, ${overview.production.hold} on hold` },
+                { metric: 'Ready for Dispatch', value: overview.production.ready, sub: 'Stage 7 items' },
+                { metric: 'Total Invoiced (₹)', value: overview.invoices.totalValue, sub: `${overview.invoices.total} invoices` },
+                { metric: 'Revenue Collected (₹)', value: overview.invoices.paidValue, sub: `${overview.invoices.paid} paid` },
+                { metric: 'Purchase Orders (₹)', value: overview.purchases.totalValue, sub: `${overview.purchases.total} POs` },
+                { metric: 'QC Pass Rate', value: overview.qc.total ? `${Math.round((overview.qc.pass / overview.qc.total) * 100)}%` : '—', sub: `${overview.qc.pass}/${overview.qc.total} passed` },
+                { metric: 'Low Stock Alerts', value: overview.lowStock, sub: 'materials below minimum' },
+              ];
+              exportCSV(overviewExport, 'consolidated_overview');
+            }
           }}
           className="flex items-center gap-1.5 text-sm border border-slate-200 bg-white px-4 py-2 rounded-xl font-semibold hover:bg-slate-50"
         >

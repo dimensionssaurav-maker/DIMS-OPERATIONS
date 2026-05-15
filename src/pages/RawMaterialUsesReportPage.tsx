@@ -149,6 +149,14 @@ export default function RawMaterialUsesReportPage({ data }: Props) {
             <span>To</span>
             <input type="date" className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
           </div>
+          {(search || categoryFilter !== 'All' || dateFrom || dateTo) && (
+            <button
+              onClick={() => { setSearch(''); setCategoryFilter('All'); setDateFrom(''); setDateTo(''); }}
+              className="text-xs text-rose-500 font-bold px-2 py-1 hover:bg-rose-50 rounded-lg"
+            >
+              ✕ Clear
+            </button>
+          )}
         </div>
       </div>
 
@@ -187,7 +195,27 @@ export default function RawMaterialUsesReportPage({ data }: Props) {
 
       {/* Material Usage Summary */}
       <div className="rounded-2xl bg-white shadow-sm border border-slate-100 p-4">
-        <h2 className="text-base font-semibold text-slate-700 mb-3">Material Usage Summary</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-slate-700">Material Usage Summary</h2>
+          <button
+            onClick={() => {
+              const rows = summaryRows.map((r, idx) => ({
+                sno: idx + 1,
+                material_name: r.material_name,
+                category: r.category,
+                unit: r.unit,
+                total_qty_used: r.totalQty,
+                total_cost: r.totalCost,
+                departments: Array.from(r.departments).join('; '),
+                production_items: r.prodItems.size,
+              }));
+              exportCSV(rows, 'material_usage_summary');
+            }}
+            className="px-4 py-2 bg-emerald-600 text-white text-sm rounded-xl hover:bg-emerald-700 transition"
+          >
+            Export CSV
+          </button>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

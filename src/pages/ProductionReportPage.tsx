@@ -25,7 +25,63 @@ const STAGES = [
   'Stage 7: Ready for Dispatch',
 ];
 
-export default function ProductionReportPage({ data }: Props) {
+function printProductionReport(items: ReturnType<typeof Array.prototype.filter>, totals: { qty: number; mat: number; lab: number; oh: number; sale: number }, showToast: any) {
+  const win = window.open('', '_blank', 'width=1200,height=800');
+  if (!win) { showToast('Allow popups and try again', 'error'); return; }
+  const rows = items.map((p: any, idx: number) => `
+    <tr style="border-bottom:1px solid #e2e8f0;font-size:11px;">
+      <td style="padding:6px 8px;color:#94a3b8;">${idx + 1}</td>
+      <td style="padding:6px 8px;font-family:monospace;color:#6366f1;">${p.production_id}</td>
+      <td style="padding:6px 8px;font-weight:600;">${p.product_name}</td>
+      <td style="padding:6px 8px;">${p.customer_name}</td>
+      <td style="padding:6px 8px;font-size:10px;">${p.current_stage}</td>
+      <td style="padding:6px 8px;text-align:center;">${p.status}</td>
+      <td style="padding:6px 8px;text-align:center;">${p.quantity}</td>
+      <td style="padding:6px 8px;text-align:right;">${p.mat_cost ? '₹' + Number(p.mat_cost).toLocaleString('en-IN') : '—'}</td>
+      <td style="padding:6px 8px;text-align:right;">${p.lab_cost ? '₹' + Number(p.lab_cost).toLocaleString('en-IN') : '—'}</td>
+      <td style="padding:6px 8px;text-align:right;">${p.oh_cost ? '₹' + Number(p.oh_cost).toLocaleString('en-IN') : '—'}</td>
+      <td style="padding:6px 8px;text-align:right;font-weight:700;color:#059669;">${p.sale_price ? '₹' + Number(p.sale_price).toLocaleString('en-IN') : '—'}</td>
+      <td style="padding:6px 8px;color:#94a3b8;">${p.created_at?.slice(0,10) || ''}</td>
+    </tr>`).join('');
+  win.document.write(`<!DOCTYPE html><html><head><title>Production Report</title><meta charset="utf-8"/>
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;padding:24px;color:#1e293b;}
+.header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid #059669;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:#f0fdf4;}
+th{padding:8px;text-align:left;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#64748b;border-bottom:2px solid #d1fae5;white-space:nowrap;}
+.tfoot td{background:#f0fdf4;font-weight:900;font-size:11px;border-top:2px solid #d1fae5;padding:6px 8px;}
+.btn{background:#059669;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px;}
+@media print{.btn{display:none;}@page{margin:10mm;size:A4 landscape;}}</style></head>
+<body>
+<button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+<div class="header">
+  <div><div style="font-size:20px;font-weight:900;color:#064e3b;">Production Report</div>
+  <div style="font-size:11px;color:#64748b;margin-top:3px;">${items.length} items</div></div>
+  <div style="font-size:11px;color:#64748b;text-align:right;">Generated: ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div>
+</div>
+<table>
+<thead><tr>
+  <th>#</th><th>Production ID</th><th>Product Name</th><th>Customer</th><th>Stage</th>
+  <th style="text-align:center;">Status</th><th style="text-align:center;">Qty</th>
+  <th style="text-align:right;">Mat Cost</th><th style="text-align:right;">Labour</th>
+  <th style="text-align:right;">Overhead</th><th style="text-align:right;">Sale Price</th><th>Created</th>
+</tr></thead>
+<tbody>${rows}</tbody>
+<tfoot><tr class="tfoot">
+  <td colspan="6">TOTALS (${items.length} items)</td>
+  <td style="text-align:center;">${totals.qty}</td>
+  <td style="text-align:right;">₹${totals.mat.toLocaleString('en-IN')}</td>
+  <td style="text-align:right;">₹${totals.lab.toLocaleString('en-IN')}</td>
+  <td style="text-align:right;">₹${totals.oh.toLocaleString('en-IN')}</td>
+  <td style="text-align:right;">₹${totals.sale.toLocaleString('en-IN')}</td>
+  <td></td>
+</tr></tfoot>
+</table>
+</body></html>`);
+  win.document.close();
+}
+
+export default function ProductionReportPage({ data, showToast }: Props) {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [search, setSearch] = useState('');
@@ -105,12 +161,20 @@ export default function ProductionReportPage({ data }: Props) {
           <h1 className="text-2xl font-bold text-slate-900">Production Report</h1>
           <p className="text-sm text-slate-500 mt-0.5">Date-filtered production summary with cost breakdown</p>
         </div>
-        <button
-          onClick={() => csvRows.length && exportCSV(csvRows, 'production_report')}
-          className="flex items-center gap-1.5 text-sm border border-slate-200 bg-white px-4 py-2 rounded-xl font-semibold hover:bg-slate-50 shadow-sm"
-        >
-          ⬇ Export CSV
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => printProductionReport(filtered, totals, showToast)}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-sm"
+          >
+            🖨 PDF
+          </button>
+          <button
+            onClick={() => csvRows.length && exportCSV(csvRows, 'production_report')}
+            className="flex items-center gap-1.5 text-sm border border-slate-200 bg-white px-4 py-2 rounded-xl font-semibold hover:bg-slate-50 shadow-sm"
+          >
+            ⬇ Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
