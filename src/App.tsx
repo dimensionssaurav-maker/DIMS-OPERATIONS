@@ -1150,7 +1150,7 @@ function CostingPage({ data, setData, showToast }: { data: AppData; setData: any
                 <div><Badge label={over ? 'Over Budget' : 'Under Budget'} color={over ? 'rose' : 'emerald'} /></div>
                 <div className="flex gap-1 justify-end items-center">
                   <span className="text-slate-400 text-xs">{isExp ? '▲' : '▼'}</span>
-                  <Btn size="sm" variant="secondary" onClick={(e: React.MouseEvent) => { e.stopPropagation(); setEditId(c.id); setForm({ production_item_id: String(c.production_item_id), estimated_cost: c.estimated_cost, material_cost: c.material_cost, labour_cost: c.labour_cost, overheads: c.overheads }); setShowModal(true); }}>Edit</Btn>
+                  <Btn size="sm" variant="secondary" onClick={() => { setEditId(c.id); setForm({ production_item_id: String(c.production_item_id), estimated_cost: c.estimated_cost, material_cost: c.material_cost, labour_cost: c.labour_cost, overheads: c.overheads }); setShowModal(true); }}>Edit</Btn>
                 </div>
               </div>
               {isExp && (
@@ -1305,7 +1305,7 @@ function InvoicingPage({ data, setData, showToast }: { data: AppData; setData: a
     if(q && !i.invoice_no?.toLowerCase().includes(q) && !i.customer_name?.toLowerCase().includes(q)) return false;
     if(invPay && i.status!==invPay) return false;
     if(invCust && i.customer_name!==invCust) return false;
-    const d=i.dispatch_date||i.created_at?.slice(0,10)||'';
+    const d=i.dispatch_date||'';
     if(invFrom && d<invFrom) return false;
     if(invTo && d>invTo) return false;
     return true;
@@ -1404,7 +1404,7 @@ function ReportsPage({ data }: { data: AppData }) {
     const q=rptSrch.toLowerCase();
     if(q && !i.invoice_no?.toLowerCase().includes(q) && !i.customer_name?.toLowerCase().includes(q)) return false;
     if(rptFilt && i.status!==rptFilt) return false;
-    const d=i.dispatch_date||i.created_at?.slice(0,10)||'';
+    const d=i.dispatch_date||'';
     if(rptFrom && d<rptFrom) return false;
     if(rptTo && d>rptTo) return false;
     return true;
@@ -1720,11 +1720,13 @@ export default function App() {
     // ── PRODUCTION ────────────────────────────────────────
     { id: 'production',          icon: '🏭', label: 'Production Flow', badge: data.production.filter((p) => p.status === 'Hold').length, section: 'PRODUCTION' },
     { id: 'production_showroom', icon: '🏪', label: 'Showroom Wise', section: null },
+    { id: 'production_report',   icon: '📊', label: 'Production Report', section: null },
     { id: 'finalize_production', icon: '🏁', label: 'Finalize Production', section: null },
     { id: 'ready_product',       icon: '✅', label: 'Ready Product', section: null },
     { id: 'wip_images',          icon: '📷', label: 'WIP Images', section: null },
     { id: 'labour',              icon: '👷', label: 'Labour Entry', section: null },
     { id: 'employee_worksheet',  icon: '📝', label: 'Employee Worksheet', section: null },
+    { id: 'employee_record',     icon: '👤', label: 'Employee Record', section: null },
     { id: 'hand_tool',           icon: '🔨', label: 'Hand Tools', section: null },
 
     // ── COSTING & PRICING ─────────────────────────────────
@@ -1747,8 +1749,9 @@ export default function App() {
     { id: 'billing_report',icon: '📉', label: 'Billing Report', section: null },
 
     // ── REPORTS ───────────────────────────────────────────
-    { id: 'consolidated', icon: '📋', label: 'Consolidated Report', section: 'REPORTS' },
-    { id: 'reports',      icon: '📈', label: 'Analytics', section: null },
+    { id: 'consolidated',        icon: '📋', label: 'Consolidated Report', section: 'REPORTS' },
+    { id: 'raw_material_report', icon: '🪵', label: 'Raw Material Report', section: null },
+    { id: 'reports',             icon: '📈', label: 'Analytics', section: null },
 
     // ── ADMIN ─────────────────────────────────────────────
     { id: 'system_map', icon: '🗺', label: 'System Map', section: 'REPORTS' },

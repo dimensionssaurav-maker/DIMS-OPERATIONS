@@ -110,15 +110,15 @@ export default function BillingPage({ data, actions, showToast, setData }: Props
 
   const invoices = data.invoices ?? [];
 
+  const activeInvoices = useMemo(() => invoices.filter((i) => (i.status as any) !== 'Cancelled'), [invoices]);
+  const cancelledInvoices = useMemo(() => invoices.filter((i) => (i.status as any) === 'Cancelled'), [invoices]);
+
   const stats = useMemo(() => ({
     total: activeInvoices.length,
     paid: activeInvoices.filter((i) => i.status === 'Paid').length,
     unpaid: activeInvoices.filter((i) => i.status === 'Unpaid').length,
     totalBilled: activeInvoices.reduce((acc, i) => acc + (i.total_amount ?? 0), 0),
   }), [activeInvoices]);
-
-  const activeInvoices = useMemo(() => invoices.filter((i) => (i.status as any) !== 'Cancelled'), [invoices]);
-  const cancelledInvoices = useMemo(() => invoices.filter((i) => (i.status as any) === 'Cancelled'), [invoices]);
 
   const filtered = useMemo(() => {
     let list = [...activeInvoices];

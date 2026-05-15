@@ -25,7 +25,7 @@ export default function Dashboard({ data, setPage }: Props) {
   const now = new Date();
   const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   const monthRevenue = data.invoices
-    .filter((i) => i.status === 'Paid' && (i.created_at ?? '') >= monthStart)
+    .filter((i) => i.status === 'Paid' && (i.dispatch_date ?? '') >= monthStart)
     .reduce((s, i) => s + Number(i.total_amount ?? 0), 0);
 
   const KPIS = [
