@@ -30,7 +30,7 @@ export default function ConsolidatedReportPage({ data }: Props) {
 
   const filteredProduction = useMemo(() => data.production.filter((p) => inRange(p.created_at)), [data.production, dateFrom, dateTo]);
   const filteredOrders = useMemo(() => data.orders.filter((o) => inRange(o.delivery_deadline ?? '')), [data.orders, dateFrom, dateTo]);
-  const filteredInvoices = useMemo(() => data.invoices.filter((i) => inRange(i.created_at)), [data.invoices, dateFrom, dateTo]);
+  const filteredInvoices = useMemo(() => data.invoices.filter((i) => inRange(i.dispatch_date)), [data.invoices, dateFrom, dateTo]);
   const filteredPOs = useMemo(() => data.purchaseOrders.filter((po) => inRange(po.order_date ?? '')), [data.purchaseOrders, dateFrom, dateTo]);
   const filteredQC = useMemo(() => qualityReports.filter((q: any) => inRange(q.created_at)), [qualityReports, dateFrom, dateTo]);
 
@@ -49,9 +49,17 @@ export default function ConsolidatedReportPage({ data }: Props) {
     return { production_id: p.production_id, product: p.product_name, customer: p.customer_name, stage: p.current_stage, status: p.status, total_cost: Number(cost?.total_cost ?? 0), qc_status: qc?.qc_status ?? '—', date: p.created_at?.slice(0, 10) };
   }), [filteredProduction, data.costing, qualityReports]);
 
-  const salesRows = useMemo(() => filteredInvoices.map((i) => ({
-    invoice_no: i.invoice_no, customer: i.customer_name, product: i.product_name, amount: Number(i.total_amount ?? 0), status: i.status, date: i.created_at?.slice(0, 10),
-  })), [filteredInvoices]);
+  const salesRows = useMemo(() => filteredInvoices.map((i) => {
+    const prodItem = data.production.find((p) => p.id === i.production_item_id);
+    return {
+      invoice_no: i.invoice_no,
+      customer: i.customer_name,
+      product: prodItem?.product_name ?? '—',
+      amount: Number(i.total_amount ?? 0),
+      status: i.status,
+      date: i.dispatch_date,
+    };
+  }), [filteredInvoices, data.production]);
 
   const materialRows = useMemo(() => data.materials.map((m) => ({
     name: m.name, category: m.category ?? '—', unit: m.unit, current_stock: m.current_stock, min_stock: m.min_stock_level, status: m.current_stock <= 0 ? 'OUT' : m.current_stock <= m.min_stock_level ? 'LOW' : 'OK',
