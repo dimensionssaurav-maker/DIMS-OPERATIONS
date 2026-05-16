@@ -125,6 +125,15 @@ export function useData() {
         labourEntries: SEED_DATA.labourEntries,
       };
 
+      // If Supabase DB is empty (no orders + no production), use seed data so the
+      // app always shows sample data instead of a blank dashboard.
+      if ((orders ?? []).length === 0 && (production ?? []).length === 0) {
+        setDataState(SEED_DATA);
+        setMode('local');
+        saveLocal(SEED_DATA);
+        return;
+      }
+
       setDataState(newData);
       setMode('supabase');
     } catch (err) {
