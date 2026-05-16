@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { useAuthStore } from './store/authStore';
@@ -214,12 +215,37 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
     if (dTo && o.delivery_deadline > dTo) return false;
     return true;
   }), [data.orders, srch, fStat, dFrom, dTo]);
-  const uploadDrawing = (orderId: number) => {
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadOrderId = useRef<number | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const triggerUpload = (orderId: number) => {
+    uploadOrderId.current = orderId;
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const orderId = uploadOrderId.current;
+    if (!file || !orderId) return;
     const exists = data.drawings.find((dr) => dr.order_id === orderId);
     const version = exists ? exists.version + 1 : 1;
-    const newDrw = { id: data.drawings.length + 1, order_id: orderId, version, file_path: `Drawing_v${version}.pdf`, status: 'Pending', comments: '', updated_at: new Date().toISOString().split('T')[0] };
+    setUploading(true);
+    let filePath = file.name;
+    try {
+      const path = `order_${orderId}/v${version}_${Date.now()}_${file.name}`;
+      const { data: stored, error } = await supabase.storage.from('drawings').upload(path, file, { upsert: true });
+      if (!error && stored) {
+        const { data: pub } = supabase.storage.from('drawings').getPublicUrl(stored.path);
+        if (pub?.publicUrl) filePath = pub.publicUrl;
+      }
+    } catch {}
+    const newDrw = { id: data.drawings.length + 1, order_id: orderId, version, file_path: filePath, status: 'Pending', comments: '', updated_at: new Date().toISOString().split('T')[0] };
     setData((d: AppData) => ({ ...d, drawings: [...d.drawings.filter((dr) => dr.order_id !== orderId), newDrw] }));
-    showToast(`Drawing v${version} uploaded!`);
+    showToast(`Drawing v${version} attached — ${file.name}`);
+    setUploading(false);
+    e.target.value = '';
   };
 
   const startProduction = (e: React.FormEvent) => {
@@ -268,11 +294,16 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
                 <td className="px-5 py-4"><StatusBadge status={o.status} /></td>
                 <td className="px-5 py-4">
                   {drawing ? (
-                    <button onClick={() => { setShowDrawModal(drawing); setDrawingForm({ status: drawing.status, comments: drawing.comments }); }} className="text-xs text-emerald-600 font-bold hover:underline">
-                      📐 v{drawing.version} — {drawing.status}
-                    </button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button onClick={() => { setShowDrawModal(drawing); setDrawingForm({ status: drawing.status, comments: drawing.comments }); }} className="text-xs text-emerald-600 font-bold hover:underline">
+                        📐 v{drawing.version} — {drawing.status}
+                      </button>
+                      <button onClick={() => triggerUpload(o.id)} disabled={uploading} className="text-xs text-amber-600 font-bold hover:underline disabled:opacity-50">⬆ New Ver</button>
+                    </div>
                   ) : (
-                    <button onClick={() => uploadDrawing(o.id)} className="text-xs text-emerald-700 font-bold hover:underline">⬆ Upload Drawing</button>
+                    <button onClick={() => triggerUpload(o.id)} disabled={uploading} className="text-xs text-emerald-700 font-bold hover:underline disabled:opacity-50">
+                      {uploading && uploadOrderId.current === o.id ? '⏳ Uploading…' : '⬆ Upload Drawing'}
+                    </button>
                   )}
                 </td>
                 <td className="px-5 py-4">
@@ -299,8 +330,16 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
         )}
         {showDrawModal && (
           <Modal title={`Drawing v${showDrawModal.version} — Update Status`} onClose={() => setShowDrawModal(null)}>
-            <div className="mb-4 p-3 bg-slate-50 rounded-xl text-sm text-slate-600">
-              <span className="font-bold">File:</span> {showDrawModal.file_path}
+            <div className="mb-4 p-3 bg-slate-50 rounded-xl text-sm text-slate-600 flex items-center gap-2 flex-wrap">
+              <span className="font-bold shrink-0">📄 File:</span>
+              <span className="font-mono text-xs text-slate-800 truncate flex-1">
+                {showDrawModal.file_path.startsWith('http')
+                  ? decodeURIComponent(showDrawModal.file_path.split('/').pop()?.replace(/^\d+_\d+_/, '') ?? showDrawModal.file_path)
+                  : showDrawModal.file_path}
+              </span>
+              {showDrawModal.file_path.startsWith('http') && (
+                <a href={showDrawModal.file_path} target="_blank" rel="noopener noreferrer" className="shrink-0 text-xs bg-emerald-600 text-white px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-700">View ↗</a>
+              )}
             </div>
             <div className="space-y-4">
               <FormField label="Update Status">
@@ -327,6 +366,7 @@ function OrdersPage({ data, setData, showToast }: { data: AppData; setData: any;
           </Modal>
         )}
       </AnimatePresence>
+      <input ref={fileInputRef} type="file" accept=".pdf,.dwg,.dxf,.png,.jpg,.jpeg,.svg" className="hidden" onChange={handleFileChange} />
     </div>
   );
 }
