@@ -2,14 +2,22 @@ import { useState, useEffect, useCallback } from 'react';
 import { db } from '../lib/supabase';
 import { logAudit } from '../lib/auditLog';
 import { useAuthStore } from '../store/authStore';
-import { SEED_DATA, type AppData } from '../data/seed';
+import { SEED_DATA, SEED_VERSION, type AppData } from '../data/seed';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 const LOCAL_KEY = 'furnitrack_data';
+const VERSION_KEY = 'furnitrack_version';
 
 function loadLocal(): AppData | null {
   try {
+    // If seed version changed, wipe old data so fresh seed loads
+    const storedVersion = localStorage.getItem(VERSION_KEY);
+    if (storedVersion !== SEED_VERSION) {
+      localStorage.removeItem(LOCAL_KEY);
+      localStorage.setItem(VERSION_KEY, SEED_VERSION);
+      return null;
+    }
     const raw = localStorage.getItem(LOCAL_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
@@ -20,6 +28,7 @@ function loadLocal(): AppData | null {
 function saveLocal(data: AppData) {
   try {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+    localStorage.setItem(VERSION_KEY, SEED_VERSION);
   } catch {
     // localStorage full or unavailable
   }
