@@ -100,7 +100,7 @@ export default function PurchaseRegisterPage({ data, showToast }: Props) {
   const allLineItems = useMemo((): LineItem[] => {
     const items: LineItem[] = [];
     data.purchaseOrders.forEach((po) => {
-      po.items.forEach((item) => {
+      (po.items ?? []).forEach((item) => {
         items.push({
           po_id: po.id,
           po_number: po.po_number,
@@ -132,7 +132,7 @@ export default function PurchaseRegisterPage({ data, showToast }: Props) {
   const stats = useMemo(() => {
     const poSet = new Set(filteredLineItems.map((i) => i.po_number));
     const totalAmount = filteredLineItems.reduce((s, i) => s + i.amount, 0);
-    const now = new Date('2026-05-14');
+    const now = new Date();
     const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const thisMonthAmount = filteredLineItems.filter((i) => i.order_date.startsWith(thisMonth)).reduce((s, i) => s + i.amount, 0);
     const supplierTotals: Record<string, number> = {};

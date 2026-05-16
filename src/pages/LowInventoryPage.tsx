@@ -73,7 +73,7 @@ export default function LowInventoryPage({ showToast, data, setPage }: Props) {
   // Find last PO supplier for a material as a hint
   const getSupplierHint = (materialId: number) => {
     const pos = data.purchaseOrders.filter((po) =>
-      po.items.some((item) => item.material_id === materialId)
+      (po.items ?? []).some((item) => item.material_id === materialId)
     );
     if (pos.length === 0) return null;
     return pos[pos.length - 1].supplier_name;

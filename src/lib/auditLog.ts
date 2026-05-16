@@ -15,5 +15,5 @@ export function logAudit(entry: AuditEntry): void {
     record_id: entry.record_id ?? null,
     username: entry.username,
     new_data: entry.new_data ?? null,
-  }).then(() => {/* fire-and-forget */});
+  }).then(() => {/* fire-and-forget */}, () => {/* ignore audit failures */});
 }
